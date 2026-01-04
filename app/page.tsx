@@ -159,34 +159,40 @@ export default function Home() {
               <TreeSkeleton />
             ) : organizationTree ? (
               <div className="grid lg:grid-cols-1 gap-8">
-                {/* Visualization Area */}
-                <div className="bg-white p-6 rounded-sm border border-gray-200 shadow-sm">
-                  {view === "tree" ? (
-                    <TreeView
-                      tree={organizationTree}
-                      onSelectUnit={handleSelectUnit}
-                      selectedUnitCode={selectedUnit?.code}
-                    />
-                  ) : (
-                    <FlowDiagram
-                      tree={organizationTree}
-                      onSelectUnit={handleSelectUnit}
-                    />
-                  )}
+                <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
+                  <div className="min-w-max">
+                    {" "}
+                    {view === "tree" ? (
+                      <TreeView
+                        tree={organizationTree}
+                        onSelectUnit={handleSelectUnit}
+                        selectedUnitCode={selectedUnit?.code}
+                      />
+                    ) : (
+                      <FlowDiagram
+                        tree={organizationTree}
+                        onSelectUnit={handleSelectUnit}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 {/* Unit Details Panel */}
-                <div className="space-y-6">
+                <div className="space-y-6 w-full min-w-0">
                   {loadingUnit ? (
                     <CardSkeleton />
                   ) : selectedUnit ? (
-                    <UnitDetails
-                      unit={selectedUnit}
-                      path={getPathArray(unitPath)}
-                    />
+                    /* Προσθήκη wrapper με overflow-x-auto για να μην σπάει η σελίδα αν έχει πίνακες */
+                    <div className="w-full overflow-x-auto">
+                      <UnitDetails
+                        unit={selectedUnit}
+                        path={getPathArray(unitPath)}
+                      />
+                    </div>
                   ) : (
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-12 text-center">
-                      <p className="text-gray-500 text-lg font-medium">
+                    /* Responsive padding: p-6 στα κινητά, p-12 σε μεγάλες οθόνες */
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
+                      <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
                         Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
                         αναλυτικές πληροφορίες
                       </p>

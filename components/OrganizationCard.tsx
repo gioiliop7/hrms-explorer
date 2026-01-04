@@ -25,12 +25,12 @@ export default function OrganizationCard({
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 flex-col md:flex-row">
         <div className="p-3 bg-blue-100 rounded-lg">
           <Building2 className="h-8 w-8 text-blue-600" />
         </div>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-sm md:text-2xl font-bold text-gray-900">
             {organization.preferredLabel}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
