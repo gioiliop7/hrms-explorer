@@ -98,10 +98,7 @@ export default function OrganizationCard({
             <div>
               <p className="text-xs text-gray-500 mb-1">Διεύθυνση</p>
               <p className="text-sm text-gray-900">
-                {address.thoroughfare} {address.locatorDesignator}
-              </p>
-              <p className="text-sm text-gray-600">
-                {address.postCode} {address.postName}
+                {address.fullAddress ? address.fullAddress : "-"}
               </p>
             </div>
           </div>

@@ -1,8 +1,7 @@
-// app/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, AlertCircle } from "lucide-react";
+// Icons removed as requested
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
@@ -15,7 +14,6 @@ import type {
   FMitrooForeasDto,
   OrgmaMonadaTreeDto,
   OrgmaMonadaDto,
-  OrgmaThesiDto,
   OrgmaPathDto,
 } from "@/types/api";
 
@@ -101,38 +99,41 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen from-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                ΣΔΑΔ Explorer
-              </h1>
-              <p className="text-sm text-gray-600">
-                Εξερευνητής Οργανογραμμάτων & Θέσεων
-              </p>
-            </div>
-          </div>
+    <main className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
+      {/* --- GOV.GR HEADER --- */}
+      <header className="govgr-header" role="banner">
+        <div className="govgr-header__content">
+          <a className="govgr-header__link block w-32 md:w-40" href="/">
+            {/* Placeholder for SVG Logo - using alt text until you insert the SVG */}
+            <img
+              src="/gov.svg"
+              className="govgr-header__logo-inverted w-full h-auto"
+              alt="gov.gr logo"
+            />
+          </a>
+          <a className="govgr-header__title hover:underline" href="/">
+            ΣΔΑΔ Explorer
+          </a>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Main Content Container */}
+      <div className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Search Section */}
-        <div className="flex justify-center">
+        <div className="w-full">
           <SearchBar onSelectOrganization={setSelectedOrganization} />
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Text Only / No Icon */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-red-900">Σφάλμα</h3>
-              <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-red-50 border-l-4 border-red-700 p-4">
+            <div className="flex">
+              <div>
+                <h3 className="text-sm font-bold text-red-900 uppercase tracking-wide">
+                  Σφάλμα
+                </h3>
+                <p className="text-sm text-red-800 mt-1">{error}</p>
+              </div>
             </div>
           </div>
         )}
@@ -144,9 +145,9 @@ export default function Home() {
 
         {/* Tree/Flow View */}
         {selectedOrganization && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-gray-900">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 gap-4">
+              <h2 className="text-2xl font-bold text-[#1b3d89]">
                 Οργανωτική Δομή
               </h2>
               <ViewToggle view={view} onViewChange={setView} />
@@ -155,19 +156,22 @@ export default function Home() {
             {loadingTree ? (
               <TreeSkeleton />
             ) : organizationTree ? (
-              <div className="grid lg:grid-cols-1 gap-6">
-                {view === "tree" ? (
-                  <TreeView
-                    tree={organizationTree}
-                    onSelectUnit={handleSelectUnit}
-                    selectedUnitCode={selectedUnit?.code}
-                  />
-                ) : (
-                  <FlowDiagram
-                    tree={organizationTree}
-                    onSelectUnit={handleSelectUnit}
-                  />
-                )}
+              <div className="grid lg:grid-cols-1 gap-8">
+                {/* Visualization Area */}
+                <div className="bg-white p-6 rounded-sm border border-gray-200 shadow-sm">
+                  {view === "tree" ? (
+                    <TreeView
+                      tree={organizationTree}
+                      onSelectUnit={handleSelectUnit}
+                      selectedUnitCode={selectedUnit?.code}
+                    />
+                  ) : (
+                    <FlowDiagram
+                      tree={organizationTree}
+                      onSelectUnit={handleSelectUnit}
+                    />
+                  )}
+                </div>
 
                 {/* Unit Details Panel */}
                 <div className="space-y-6">
@@ -179,9 +183,11 @@ export default function Home() {
                       path={getPathArray(unitPath)}
                     />
                   ) : (
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center text-gray-500">
-                      <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p>Επιλέξτε μια μονάδα για να δείτε λεπτομέρειες</p>
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-12 text-center">
+                      <p className="text-gray-500 text-lg font-medium">
+                        Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
+                        αναλυτικές πληροφορίες
+                      </p>
                     </div>
                   )}
                 </div>
@@ -190,27 +196,55 @@ export default function Home() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Text Only / No Icon */}
         {!selectedOrganization && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center">
-            <Building2 className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="mt-12 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
+            <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
               Καλώς ήρθατε στον ΣΔΑΔ Explorer
             </h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Αναζητήστε έναν φορέα για να εξερευνήσετε το οργανόγραμμα και τις
-              θέσεις εργασίας του
+            <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
+              Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
+              επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
             </p>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-gray-500">
-            Δεδομένα από το Σύστημα Διαχείρισης Ανθρώπινου Δυναμικού (ΣΔΑΔ)
-          </p>
+      {/* --- GOV.GR FOOTER --- */}
+      <footer className="govgr-footer">
+        <div className="govgr-width-container">
+          <div className="govgr-footer__meta">
+            <div className="govgr-footer__meta-item govgr-footer__meta-item--grow">
+              <div className="govgr-footer__content">
+                <p className="govgr-footer__licence-description">
+                  © Copyright 2026 - Υλοποίηση από{" "}
+                  <a
+                    href="https://gioiliop.eu"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="govgr-link"
+                  >
+                    Giorgos Iliopoulos
+                    <span className="sr-only">
+                      (ανοίγει σε καινούρια καρτέλα)
+                    </span>
+                  </a>
+                  <br />
+                  <span className="text-sm text-gray-500 mt-2 block">
+                    Δεδομένα από το Σύστημα Διαχείρισης Ανθρώπινου Δυναμικού
+                    (ΣΔΑΔ)
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="govgr-footer__meta-item">
+              <img
+                className="govgr-footer__government-logo w-48 h-auto"
+                src="/hr.svg"
+                alt="Hellenic Republic Logo"
+              />
+            </div>
+          </div>
         </div>
       </footer>
     </main>
