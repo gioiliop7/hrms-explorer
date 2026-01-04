@@ -1,18 +1,22 @@
 // components/SearchBar.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
-import { organizationAPI } from '@/lib/api';
-import { debounce } from '@/lib/utils';
-import type { FMitrooForeasDto } from '@/types/api';
+import { useState, useEffect } from "react";
+import { Search, Loader2 } from "lucide-react";
+import { organizationAPI } from "@/lib/api";
+import { debounce } from "@/lib/utils";
+import type { FMitrooForeasDto } from "@/types/api";
+import { useSearchParams } from "next/navigation";
 
 interface SearchBarProps {
   onSelectOrganization: (org: FMitrooForeasDto) => void;
 }
 
 export default function SearchBar({ onSelectOrganization }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") ?? "";
+
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<FMitrooForeasDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +35,7 @@ export default function SearchBar({ onSelectOrganization }: SearchBarProps) {
       setResults(response.data.data || []);
       setIsOpen(true);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -41,7 +45,9 @@ export default function SearchBar({ onSelectOrganization }: SearchBarProps) {
   const debouncedSearch = debounce(searchOrganizations, 300);
 
   useEffect(() => {
-    debouncedSearch(query);
+    if (query) {
+      debouncedSearch(query);
+    }
   }, [query]);
 
   const handleSelect = (org: FMitrooForeasDto) => {
