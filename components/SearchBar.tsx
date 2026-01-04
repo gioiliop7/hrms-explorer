@@ -1,7 +1,7 @@
 // components/SearchBar.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { organizationAPI } from "@/lib/api";
 import { debounce } from "@/lib/utils";
@@ -42,13 +42,16 @@ export default function SearchBar({ onSelectOrganization }: SearchBarProps) {
     }
   };
 
-  const debouncedSearch = debounce(searchOrganizations, 300);
+  const debouncedSearch = useMemo(() => debounce(searchOrganizations, 400), []);
 
   useEffect(() => {
-    if (query) {
+    if (query.length >= 2) {
       debouncedSearch(query);
+    } else {
+      setResults([]);
+      setIsOpen(false);
     }
-  }, [query]);
+  }, [query, debouncedSearch]);
 
   const handleSelect = (org: FMitrooForeasDto) => {
     setQuery(org.preferredLabel);
