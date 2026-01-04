@@ -7,7 +7,6 @@ import type {
   OrgmaMonadaDto,
   OrgmaMonadaTreeDto,
   OrgmaPathDto,
-  OrgmaThesiDto,
   LexWithoutParentDto,
   LexWithParentDto,
 } from "@/types/api";
@@ -84,29 +83,6 @@ export const orgUnitsAPI = {
   // Get path to specific unit (breadcrumbs)
   getPath: (unitCode: string) =>
     fetchAPI<ResponseWrapper<OrgmaPathDto>>(`/organization-path/${unitCode}`),
-};
-
-// Positions Endpoints
-export const positionsAPI = {
-  // Get positions for organization/unit
-  getPositions: (organizationCode?: string, unitCode?: string) =>
-    fetchAPI<ResponseWrapper<OrgmaThesiDto[]>>(
-      `/positions${buildQueryString({ organizationCode, unitCode })}`
-    ),
-
-  // Download job description PDF
-  getJobDescriptionPDF: async (positionCode: string) => {
-    const response = await fetch(
-      `${BASE_URL}/positions/${positionCode}/job-description`
-    );
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    return { data: blob };
-  },
 };
 
 // Dictionary Endpoints
