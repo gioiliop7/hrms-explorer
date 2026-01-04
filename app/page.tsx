@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// Icons removed as requested
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
@@ -16,6 +15,7 @@ import type {
   OrgmaMonadaDto,
   OrgmaPathDto,
 } from "@/types/api";
+import { Suspense } from "react";
 
 export default function Home() {
   const [selectedOrganization, setSelectedOrganization] =
@@ -121,7 +121,9 @@ export default function Home() {
       <div className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Search Section */}
         <div className="w-full">
-          <SearchBar onSelectOrganization={setSelectedOrganization} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <SearchBar onSelectOrganization={setSelectedOrganization} />
+          </Suspense>
         </div>
 
         {/* Error Message - Text Only / No Icon */}
