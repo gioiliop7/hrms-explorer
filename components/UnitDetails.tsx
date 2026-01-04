@@ -141,13 +141,7 @@ export default function UnitDetails({ unit, path }: UnitDetailsProps) {
           <div className="flex items-start gap-3">
             <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
             <div className="text-sm text-gray-600">
-              <p>
-                {unit.mainAddress.thoroughfare}{" "}
-                {unit.mainAddress.locatorDesignator}
-              </p>
-              <p>
-                {unit.mainAddress.postCode} {unit.mainAddress.postName}
-              </p>
+              <p>{unit.mainAddress.fullAddress}</p>
             </div>
           </div>
         </div>
