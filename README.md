@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏛️ HRMS (ΣΔΑΔ) Explorer
 
-## Getting Started
+An application for exploring **organizational charts and job positions** from the **Human Resources Management System (ΣΔΑΔ)** of the Greek public sector.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+✅ Organization search with autocomplete  
+✅ Hierarchical Tree View with expand / collapse  
+✅ Interactive Flow Diagram with draggable & zoomable nodes  
+✅ Organizational Unit details with breadcrumbs  
+✅ Job Positions with downloadable **PDF Job Descriptions (ΕΠΘ)**  
+✅ CORS bypass using **Next.js API Routes (proxy)**  
+✅ Fully responsive (mobile & desktop)  
+✅ Modern UI built with **Tailwind CSS**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📋 Prerequisites
 
-## Learn More
+- Node.js **18.x** or newer
+- npm or yarn
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔧 Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Clone the repository (or create a new folder)
 
-## Deploy on Vercel
+`git clone repo`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Install dependencies
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`npm install # or yarn install`
+
+### Start the development server
+
+`npm run dev # or yarn dev`
+
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+---
+
+## 🎯 Usage
+
+### 1. Organization Search
+
+- Type in the search bar (e.g. _"Ministry of Education"_)
+- Select an organization from the autocomplete results
+
+### 2. Organization Chart View
+
+- **Tree View**: Hierarchical list with expand / collapse
+- **Flow Diagram**: Interactive flow chart with drag & zoom
+
+### 3. Unit Selection
+
+- Click on any organizational unit
+- View unit details and breadcrumb navigation
+
+---
+
+## 🏗️ Production Build
+
+`npm run build
+npm start`
+
+---
+
+## 📦 Deployment
+
+### Vercel (Recommended)
+
+`npm install -g vercel
+vercel`
+
+### Docker
+
+`FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+CMD ["npm", "start"]`
+
+---
+
+## 🐛 Troubleshooting
+
+### “Module not found” errors
+
+`rm -rf node_modules package-lock.json
+npm install`
+
+### React Flow rendering issues
+
+Make sure you have imported the CSS:
+
+`import  'reactflow/dist/style.css';`
+
+### CORS errors
+
+- The API is public, but if issues occur:
+
+  - Use **Next.js API Routes** as a proxy
+  - Or enable CORS on the backend server
+
+---
+
+## 📝 License
+
+MIT
+
+---
+
+## 👨‍💻 Author
+
+Created with ❤️ for exploring **Greek Government organizations** from **Gioiliop**
