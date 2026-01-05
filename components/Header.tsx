@@ -3,6 +3,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * Header component
@@ -28,9 +29,9 @@ export default function Header() {
           <div className="border-l border-gray-600 h-6" />
 
           {/* Title */}
-          <a className="text-white text-xl md:text-2xl font-semibold">
+          <Link href="/" className="text-white text-xl md:text-2xl font-semibold">
             ΣΔΑΔ Explorer
-          </a>
+          </Link>
         </div>
       </div>
 
