@@ -103,6 +103,7 @@ export default function Home() {
       {/* --- GOV.GR HEADER --- */}
       <header className="govgr-header" role="banner">
         <div className="govgr-header__content">
+          <img src="/logo.png" alt="logo" />
           <a className="govgr-header__title hover:underline" href="/">
             ΣΔΑΔ Explorer
           </a>
