@@ -12,14 +12,13 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Gov.gr",
-    default: "ΣΔΑΔ Explorer | Gov.gr", // SDAD Explorer
+    template: "%s",
+    default: "ΣΔΑΔ Explorer", // SDAD Explorer
   },
   description:
     "Εξερευνητής Οργανογραμμάτων & Θέσεων του Συστήματος Διαχείρισης Ανθρώπινου Δυναμικού (ΣΔΑΔ).",
   keywords: [
     "ΣΔΑΔ",
-    "Gov.gr",
     "Δημόσιο",
     "Οργανόγραμμα",
     "Θέσεις Εργασίας",
@@ -28,10 +27,10 @@ export const metadata: Metadata = {
     "HRMS",
   ],
   authors: [
-    { name: "Υπουργείο Ψηφιακής Διακυβέρνησης", url: "https://mindigital.gr" },
+    { name: "Giorgos Iliopoulos", url: "https://gioiliop.eu" },
   ],
-  creator: "Ministry of Digital Governance",
-  publisher: "Hellenic Republic",
+  creator: "Giorgos Iliopoulos",
+  publisher: "Giorgos Iliopoulos",
   robots: {
     index: true,
     follow: true,
