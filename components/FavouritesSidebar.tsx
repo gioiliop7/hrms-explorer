@@ -1,6 +1,7 @@
 // components/FavoritesSidebar.tsx
 "use client";
 
+import React, { useEffect } from "react";
 import { Star, Clock, Trash2, X } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
 
@@ -23,15 +24,25 @@ export default function FavoritesSidebar({
     clearRecent,
   } = useFavoritesContext();
 
+  // Disable body scroll when sidebar is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 z-40" />
 
       {/* Sidebar */}
       <div
