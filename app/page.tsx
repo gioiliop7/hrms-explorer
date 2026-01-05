@@ -103,14 +103,6 @@ export default function Home() {
       {/* --- GOV.GR HEADER --- */}
       <header className="govgr-header" role="banner">
         <div className="govgr-header__content">
-          <a className="govgr-header__link block w-32 md:w-40" href="/">
-            {/* Placeholder for SVG Logo - using alt text until you insert the SVG */}
-            <img
-              src="/gov.svg"
-              className="govgr-header__logo-inverted w-full h-auto"
-              alt="gov.gr logo"
-            />
-          </a>
           <a className="govgr-header__title hover:underline" href="/">
             ΣΔΑΔ Explorer
           </a>
@@ -250,11 +242,16 @@ export default function Home() {
               </div>
             </div>
             <div className="govgr-footer__meta-item">
-              <img
-                className="govgr-footer__government-logo w-48 h-auto"
-                src="/hr.svg"
-                alt="Hellenic Republic Logo"
-              />
+              <p>Inspired by gov.gr look and feel</p>
+              <a
+                href="https://guide.services.gov.gr/"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="govgr-link"
+              >
+                Δείτε περισσότερα εδώ
+                <span className="sr-only">(ανοίγει σε καινούρια καρτέλα)</span>
+              </a>
             </div>
           </div>
         </div>
