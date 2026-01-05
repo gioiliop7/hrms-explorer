@@ -133,71 +133,35 @@ export default function Home() {
       <div className="container mx-auto px-4 flex-1 flex flex-col max-w-7xl">
 
         {/* Top Controls: Search and Action Buttons */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 gap-4 w-full">
-          {/* Search Section */}
-          <div className="w-full">
-            <Suspense fallback={<div>Loading...</div>}>
-              <SearchBar onSelectOrganization={setSelectedOrganization} />
-            </Suspense>
-          </div>
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 w-full justify-end">
-            <button
-              onClick={() => setShowFavorites(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
-            >
-              <Star className="h-5 w-5" />
-              <span className="hidden sm:inline">Αγαπημένα</span>
-            </button>
-
-            {selectedOrganization && (
-              <>
-                <button
-                  onClick={() => setShowStatistics(!showStatistics)}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                >
-                  <BarChart3 className="h-5 w-5" />
-                  <span className="hidden sm:inline">Στατιστικά</span>
-                </button>
-
-                <button
-                  onClick={() => setShowComparison(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                >
-                  <BarChart3 className="h-5 w-5" />
-                  <span className="hidden sm:inline">Σύγκριση</span>
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Statistics Dashboard */}
-          {selectedOrganization && showStatistics && allUnits.length > 0 && (
-            <div className="space-y-4 w-full mx-auto flex justify-center flex-col max-w-[60%]">
-              <h2 className="text-xl font-bold text-gray-900">
-                Στατιστικά & Αναλύσεις
-              </h2>
-              <StatisticsCard units={allUnits} />
-            </div>
-          )}
-        </div>
-
+        <TopControls
+          setShowFavorites={setShowFavorites}
+          setShowStatistics={setShowStatistics}
+          setShowComparison={setShowComparison}
+          showStatistics={showStatistics}
+          selectedOrganization={selectedOrganization}
+          setSelectedOrganization={setSelectedOrganization}
+        />
         
+        {/* Empty State - Text Only / No Icon */}
+        {!selectedOrganization && (
+          <WelcomeMessage />
+        )}
 
         {/* Main Content Container */}
         <div className="flex-grow py-10 space-y-8">
 
           {/* Error Message - Text Only / No Icon */}
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-700 p-4">
-              <div className="flex">
-                <div>
-                  <h3 className="text-sm font-bold text-red-900 uppercase tracking-wide">
-                    Σφάλμα
-                  </h3>
-                  <p className="text-sm text-red-800 mt-1">{error}</p>
-                </div>
-              </div>
+            <ErrorMessage message={error} />
+          )}
+
+          {/* Statistics Dashboard */}
+          {selectedOrganization && showStatistics && allUnits.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Στατιστικά & Αναλύσεις
+              </h2>
+              <StatisticsCard units={allUnits} />
             </div>
           )}
 
@@ -272,19 +236,6 @@ export default function Home() {
               ) : null}
             </div>
           )}
-
-          {/* Empty State - Text Only / No Icon */}
-          {!selectedOrganization && (
-            <div className="mt-12 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
-              <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
-                Καλώς ήρθατε στον ΣΔΑΔ Explorer
-              </h3>
-              <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
-                Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
-                επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
-              </p>
-            </div>
-          )}
         </div>
       </div>
       
@@ -303,5 +254,102 @@ export default function Home() {
         />
       )}
     </main>
+  );
+}
+
+// Separate component for Welcome Message
+function WelcomeMessage() {
+  return (
+    <div className="mt-6 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
+      <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
+        Καλώς ήρθατε στον ΣΔΑΔ Explorer
+      </h3>
+      <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
+        Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
+        επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
+      </p>
+    </div>
+  )
+}
+
+// Separate component for Error Message
+function ErrorMessage({ message }: { 
+  message: string 
+}) {
+  return (
+    <div className="bg-red-50 border-l-4 border-red-700 p-4">
+      <div className="flex">
+        <div>
+          <h3 className="text-sm font-bold text-red-900 uppercase tracking-wide">
+            Σφάλμα
+          </h3>
+          <p className="text-sm text-red-800 mt-1">{message}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Separate component for Top Controls
+function TopControls({
+  setShowFavorites,
+  setShowStatistics,
+  setShowComparison,
+  showStatistics,
+  selectedOrganization,
+  setSelectedOrganization,
+}: {
+  setShowFavorites: (v: boolean) => void;
+  setShowStatistics: (v: boolean) => void;
+  setShowComparison: (v: boolean) => void;
+  showStatistics: boolean;
+  selectedOrganization: FMitrooForeasDto | null;
+  setSelectedOrganization: (org: FMitrooForeasDto | null) => void;
+}) {
+  return (
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 gap-4 w-full">
+      {/* Search Section */}
+      <div className="w-full">
+        <Suspense fallback={<div>Loading...</div>}>
+          <SearchBar onSelectOrganization={setSelectedOrganization} />
+        </Suspense>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 w-full justify-end">
+        {/* Favorites Button */}
+        <button
+          onClick={() => setShowFavorites(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+        >
+          <Star className="h-5 w-5" />
+          <span className="hidden sm:inline">Αγαπημένα</span>
+        </button>
+
+        {selectedOrganization && (
+          <>
+            {/* Statistics Button */}
+            <button
+              onClick={() => setShowStatistics(!showStatistics)}
+              className={`flex items-center gap-2 px-4 py-2 text-purple-700 ${
+                showStatistics ? "bg-purple-200" : "bg-purple-100"
+              } rounded-lg hover:bg-purple-200 transition-colors`}
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="hidden sm:inline">Στατιστικά</span>
+            </button>
+
+            {/* Comparison Button */}
+            <button
+              onClick={() => setShowComparison(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="hidden sm:inline">Σύγκριση</span>
+            </button>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
