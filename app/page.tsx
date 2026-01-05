@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
@@ -21,7 +21,7 @@ import ComparisonView from "@/components/ComparisonView";
 import FavoriteButton from "@/components/FavoriteButton";
 import StatisticsCard from "@/components/StatisticsCard";
 import { BarChart3, Star } from "lucide-react";
-import { useFavorites } from "@/lib/useFavorites";
+import { useFavoritesContext } from "@/lib/FavoritesContext";
 
 export default function Home() {
   const [selectedOrganization, setSelectedOrganization] =
@@ -42,7 +42,7 @@ export default function Home() {
   const [showStatistics, setShowStatistics] = useState(false);
   const [allUnits, setAllUnits] = useState<OrgmaMonadaDto[]>([]);
 
-  const { addToRecent } = useFavorites();
+  const { addToRecent } = useFavoritesContext();
 
   // Load organization tree when organization is selected
   useEffect(() => {

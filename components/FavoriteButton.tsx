@@ -2,7 +2,7 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { useFavorites } from "@/lib/useFavorites";
+import { useFavoritesContext } from "@/lib/FavoritesContext";
 import type { FMitrooForeasDto } from "@/types/api";
 
 interface FavoriteButtonProps {
@@ -14,7 +14,7 @@ export default function FavoriteButton({
   organization,
   showLabel = false,
 }: FavoriteButtonProps) {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavoritesContext();
   const favorite = isFavorite(organization.code);
 
   return (

@@ -2,7 +2,7 @@
 "use client";
 
 import { Star, Clock, Trash2, X } from "lucide-react";
-import { useFavorites } from "@/lib/useFavorites";
+import { useFavoritesContext } from "@/lib/FavoritesContext";
 
 interface FavoritesSidebarProps {
   onSelectOrganization: (code: string) => void;
@@ -21,7 +21,7 @@ export default function FavoritesSidebar({
     removeFavorite,
     clearFavorites,
     clearRecent,
-  } = useFavorites();
+  } = useFavoritesContext();
 
   if (!isOpen) return null;
 
