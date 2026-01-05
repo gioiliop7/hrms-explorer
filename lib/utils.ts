@@ -190,3 +190,13 @@ export function exportTreeToCSV(tree: OrgmaMonadaTreeDto) {
 
   URL.revokeObjectURL(url);
 }
+
+export function getEducationLabel(category: number): string {
+  const labels: Record<number, string> = {
+    1: "ΠΕ",
+    2: "ΤΕ",
+    3: "ΔΕ",
+    4: "ΥΕ",
+  };
+  return labels[category] || `Κατηγορία ${category}`;
+}

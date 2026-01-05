@@ -8,7 +8,7 @@ import FlowDiagram from "@/components/FlowDiagram";
 import UnitDetails from "@/components/UnitDetails";
 import ViewToggle from "@/components/ViewToggle";
 import { CardSkeleton, TreeSkeleton } from "@/components/LoadingSkeleton";
-import { orgUnitsAPI } from "@/lib/api";
+import { orgUnitsAPI, organizationAPI } from "@/lib/api";
 import type {
   FMitrooForeasDto,
   OrgmaMonadaTreeDto,
@@ -16,6 +16,12 @@ import type {
   OrgmaPathDto,
 } from "@/types/api";
 import { Suspense } from "react";
+import FavoritesSidebar from "@/components/FavouritesSidebar";
+import ComparisonView from "@/components/ComparisonView";
+import FavoriteButton from "@/components/FavoriteButton";
+import StatisticsCard from "@/components/StatisticsCard";
+import { BarChart3, Star } from "lucide-react";
+import { useFavorites } from "@/lib/useFavorites";
 
 export default function Home() {
   const [selectedOrganization, setSelectedOrganization] =
@@ -30,10 +36,19 @@ export default function Home() {
   const [loadingUnit, setLoadingUnit] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // New state for features
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
+  const [allUnits, setAllUnits] = useState<OrgmaMonadaDto[]>([]);
+
+  const { addToRecent } = useFavorites();
+
   // Load organization tree when organization is selected
   useEffect(() => {
     if (selectedOrganization) {
       loadOrganizationTree(selectedOrganization.code);
+      addToRecent(selectedOrganization);
     }
   }, [selectedOrganization]);
 
@@ -41,13 +56,28 @@ export default function Home() {
     setLoadingTree(true);
     setError(null);
     try {
-      const response = await orgUnitsAPI.getTree(organizationCode);
-      setOrganizationTree(response.data.data);
+      const [treeResponse, unitsResponse] = await Promise.all([
+        orgUnitsAPI.getTree(organizationCode),
+        orgUnitsAPI.getUnits(organizationCode),
+      ]);
+      setOrganizationTree(treeResponse.data.data);
+      setAllUnits(unitsResponse.data.data || []);
     } catch (err) {
       console.error("Error loading tree:", err);
       setError("Σφάλμα κατά τη φόρτωση του οργανογράμματος");
     } finally {
       setLoadingTree(false);
+    }
+  };
+
+  // Handle selecting organization by code (from favorites)
+  const handleSelectByCode = async (code: string) => {
+    try {
+      const response = await organizationAPI.getByCode(code);
+      setSelectedOrganization(response.data.data);
+    } catch (error) {
+      console.error("Error loading organization:", error);
+      setError("Σφάλμα κατά τη φόρτωση του φορέα");
     }
   };
 
@@ -110,6 +140,47 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 my-5 mx-auto w-full justify-center">
+        <button
+          onClick={() => setShowFavorites(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+        >
+          <Star className="h-5 w-5" />
+          <span className="hidden sm:inline">Αγαπημένα</span>
+        </button>
+
+        {selectedOrganization && (
+          <>
+            <button
+              onClick={() => setShowStatistics(!showStatistics)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="hidden sm:inline">Στατιστικά</span>
+            </button>
+
+            <button
+              onClick={() => setShowComparison(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="hidden sm:inline">Σύγκριση</span>
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Statistics Dashboard */}
+      {selectedOrganization && showStatistics && allUnits.length > 0 && (
+        <div className="space-y-4 w-full mx-auto flex justify-center flex-col max-w-[60%]">
+          <h2 className="text-xl font-bold text-gray-900">
+            Στατιστικά & Αναλύσεις
+          </h2>
+          <StatisticsCard units={allUnits} />
+        </div>
+      )}
+
       {/* Main Content Container */}
       <div className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {/* Search Section */}
@@ -135,7 +206,15 @@ export default function Home() {
 
         {/* Organization Details */}
         {selectedOrganization && (
-          <OrganizationCard organization={selectedOrganization} />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">
+                Στοιχεία Φορέα
+              </h2>
+              <FavoriteButton organization={selectedOrganization} showLabel />
+            </div>
+            <OrganizationCard organization={selectedOrganization} />
+          </div>
         )}
 
         {/* Tree/Flow View */}
@@ -240,6 +319,10 @@ export default function Home() {
                   *Η σελίδα αποτελεί προσωπικό project και δεν είναι επίσημη
                   πλατφόρμα του gov.gr
                 </p>
+                <p className="italic text-[13px] text-gray-500 mt-2">
+                  **Τα αγαπημένα δεν αποθηκεύονται σε κάποια βάση δεδομένων,
+                  παρα μόνο μόνο τοπικά στον υπολογστή σας μέσω του localStorage
+                </p>
               </div>
             </div>
             <div className="govgr-footer__meta-item">
@@ -257,6 +340,20 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      {/* Favorites Sidebar */}
+      <FavoritesSidebar
+        isOpen={showFavorites}
+        onClose={() => setShowFavorites(false)}
+        onSelectOrganization={handleSelectByCode}
+      />
+
+      {/* Comparison View Modal */}
+      {showComparison && (
+        <ComparisonView
+          initialOrganization={selectedOrganization || undefined}
+          onClose={() => setShowComparison(false)}
+        />
+      )}
     </main>
   );
 }
