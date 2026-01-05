@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "el_GR",
-    url: "https://hrmsgov.gioiliop.eur",
+    url: "https://hrmsgov.gioiliop.eu",
     title: "ΣΔΑΔ Explorer",
     description:
       "Διαδραστική απεικόνιση της οργανωτικής δομής και των θέσεων του Δημοσίου Τομέα.",
