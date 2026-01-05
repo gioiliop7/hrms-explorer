@@ -1,9 +1,10 @@
 // components/TreeView.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronRight, ChevronDown, Building2 } from 'lucide-react';
-import type { OrgmaMonadaTreeDto } from '@/types/api';
+import { useState } from "react";
+import { ChevronRight, ChevronDown, Building2 } from "lucide-react";
+import type { OrgmaMonadaTreeDto } from "@/types/api";
+import { exportTreeToCSV } from "@/lib/utils";
 
 interface TreeViewProps {
   tree: OrgmaMonadaTreeDto;
@@ -18,10 +19,19 @@ export default function TreeView({
 }: TreeViewProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <Building2 className="h-5 w-5" />
-        Ιεραρχική Δομή
-      </h3>
+      <div className="flex justify-between gap-3 flex-col md:flex-row my-5 md:my-0">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Building2 className="h-5 w-5" />
+          Ιεραρχική Δομή
+        </h3>
+        <button
+          onClick={() => exportTreeToCSV(tree)}
+          className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+        >
+          Εξαγωγή CSV
+        </button>
+      </div>
+
       <div className="overflow-auto max-h-[600px]">
         <TreeNode
           node={tree}
@@ -52,7 +62,7 @@ function TreeNode({ node, level, onSelect, selectedCode }: TreeNodeProps) {
         className={`
           flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer
           transition-colors
-          ${isSelected ? 'bg-blue-100 text-blue-900' : 'hover:bg-gray-50'}
+          ${isSelected ? "bg-blue-100 text-blue-900" : "hover:bg-gray-50"}
         `}
         style={{ paddingLeft: `${level * 24 + 12}px` }}
         onClick={() => {

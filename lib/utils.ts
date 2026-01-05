@@ -138,3 +138,55 @@ export function getUnitTypeLabel(unitType?: number): string {
   };
   return unitTypes[unitType || 0] || "Άγνωστος Τύπος";
 }
+
+export function flattenTree(
+  node: OrgmaMonadaTreeDto,
+  level = 0,
+  parentCode: string | null = null,
+  acc: any[] = []
+) {
+  acc.push({
+    code: node.code,
+    label: node.preferredLabel,
+    level,
+    parentCode,
+  });
+
+  if (node.children) {
+    node.children.forEach((child) =>
+      flattenTree(child, level + 1, node.code, acc)
+    );
+  }
+
+  return acc;
+}
+
+export function exportTreeToCSV(tree: OrgmaMonadaTreeDto) {
+  const rows = flattenTree(tree);
+
+  const header = ["Code", "Label", "Level", "ParentCode"];
+  const csvContent = [
+    header.join(","),
+    ...rows.map((row) =>
+      [
+        row.code,
+        `"${row.label.replace(/"/g, '""')}"`,
+        row.level,
+        row.parentCode ?? "",
+      ].join(",")
+    ),
+  ].join("\n");
+
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "org-structure.csv";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}

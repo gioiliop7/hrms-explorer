@@ -235,10 +235,10 @@ export default function Home() {
                     Δεδομένα από το Σύστημα Διαχείρισης Ανθρώπινου Δυναμικού
                     (ΣΔΑΔ)
                   </span>
-                  <p className="italic">
-                    *Η σελίδα αποτελεί προσωπικό project και δεν είναι επίσημη
-                    πλατφόρμα του gov.gr
-                  </p>
+                </p>
+                <p className="italic text-sm text-gray-500 mt-2">
+                  *Η σελίδα αποτελεί προσωπικό project και δεν είναι επίσημη
+                  πλατφόρμα του gov.gr
                 </p>
               </div>
             </div>
