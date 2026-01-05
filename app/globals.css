@@ -1,18 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f3f4f6;
   --foreground: #171717;
-  /* Official Gov.gr Color Palette approximates */
-  --gov-blue: #003375; /* Primary Dark Blue */
-  --gov-cyan: #00aeef; /* Tertiary Border Color */
-  --gov-gold: #e6ac00; /* Secondary/Warning */
-  --gov-text: #1a1a1a;
+}
+
+@theme {
+  --color-gov-blue: #003375;
+  --color-gov-cyan: #036cc6;
+  --color-gov-blueLight: #1f5e90;
+  --color-gov-gold: #e6ac00;
+  --color-gov-text: #1a1a1a;
+  --color-gov-gray: #ebebeb;
 }
 
 body {
   color: var(--gov-text);
-  background-color: #f3f4f6; /* Light gray background standard for admin tools */
+  background-color: var(--background);
 }
 
 button,
@@ -62,75 +66,4 @@ a {
   transition-property: background-color, border-color, color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
-}
-
-/* Gov.gr Header Styles */
-.govgr-header {
-  background-color: var(--gov-blue);
-  border-bottom: 8px solid #036cc6;
-  position: relative;
-  width: 100%;
-}
-
-.govgr-header__content {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  max-width: 80rem; /* max-w-7xl */
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-}
-
-.govgr-header__title {
-  color: white;
-  font-weight: 700;
-  font-size: 1.5rem;
-  text-decoration: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
-  padding-left: 1.5rem;
-  line-height: 1.2;
-}
-
-/* Gov.gr Footer Styles */
-.govgr-footer {
-  background-color: #ebebeb;
-  border-top: 4px solid #1f5e90;
-  width: 100%;
-  margin-top: auto;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-.govgr-width-container {
-  max-width: 80rem; /* max-w-7xl */
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.govgr-footer__meta {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 2rem;
-}
-
-.govgr-footer__meta-item--grow {
-  flex-grow: 1;
-}
-
-.govgr-footer__licence-description {
-  font-size: 0.875rem;
-  color: #4b5563;
-}
-
-.govgr-link {
-  color: #1d4ed8;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.govgr-link:hover {
-  text-decoration-thickness: 2px;
 }

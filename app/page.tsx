@@ -129,217 +129,165 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
-      {/* --- GOV.GR HEADER --- */}
-      <header className="govgr-header" role="banner">
-        <div className="govgr-header__content">
-          <img className="max-w-25 w-full" src="/logo.png" alt="logo" />
-          <a className="govgr-header__title hover:underline" href="/">
-            ΣΔΑΔ Explorer
-          </a>
-        </div>
-      </header>
+    <main>
+      <div className="container mx-auto px-4 flex-1 flex flex-col max-w-7xl">
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2 my-5 mx-auto w-full justify-center">
-        <button
-          onClick={() => setShowFavorites(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
-        >
-          <Star className="h-5 w-5" />
-          <span className="hidden sm:inline">Αγαπημένα</span>
-        </button>
-
-        {selectedOrganization && (
-          <>
+        {/* Top Controls: Search and Action Buttons */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 gap-4 w-full">
+          {/* Search Section */}
+          <div className="w-full">
+            <Suspense fallback={<div>Loading...</div>}>
+              <SearchBar onSelectOrganization={setSelectedOrganization} />
+            </Suspense>
+          </div>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 w-full justify-end">
             <button
-              onClick={() => setShowStatistics(!showStatistics)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              onClick={() => setShowFavorites(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
             >
-              <BarChart3 className="h-5 w-5" />
-              <span className="hidden sm:inline">Στατιστικά</span>
+              <Star className="h-5 w-5" />
+              <span className="hidden sm:inline">Αγαπημένα</span>
             </button>
 
-            <button
-              onClick={() => setShowComparison(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-            >
-              <BarChart3 className="h-5 w-5" />
-              <span className="hidden sm:inline">Σύγκριση</span>
-            </button>
-          </>
-        )}
-      </div>
+            {selectedOrganization && (
+              <>
+                <button
+                  onClick={() => setShowStatistics(!showStatistics)}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                >
+                  <BarChart3 className="h-5 w-5" />
+                  <span className="hidden sm:inline">Στατιστικά</span>
+                </button>
 
-      {/* Statistics Dashboard */}
-      {selectedOrganization && showStatistics && allUnits.length > 0 && (
-        <div className="space-y-4 w-full mx-auto flex justify-center flex-col max-w-[60%]">
-          <h2 className="text-xl font-bold text-gray-900">
-            Στατιστικά & Αναλύσεις
-          </h2>
-          <StatisticsCard units={allUnits} />
+                <button
+                  onClick={() => setShowComparison(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  <BarChart3 className="h-5 w-5" />
+                  <span className="hidden sm:inline">Σύγκριση</span>
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Statistics Dashboard */}
+          {selectedOrganization && showStatistics && allUnits.length > 0 && (
+            <div className="space-y-4 w-full mx-auto flex justify-center flex-col max-w-[60%]">
+              <h2 className="text-xl font-bold text-gray-900">
+                Στατιστικά & Αναλύσεις
+              </h2>
+              <StatisticsCard units={allUnits} />
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Main Content Container */}
-      <div className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        {/* Search Section */}
-        <div className="w-full">
-          <Suspense fallback={<div>Loading...</div>}>
-            <SearchBar onSelectOrganization={setSelectedOrganization} />
-          </Suspense>
-        </div>
+        
 
-        {/* Error Message - Text Only / No Icon */}
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-700 p-4">
-            <div className="flex">
-              <div>
-                <h3 className="text-sm font-bold text-red-900 uppercase tracking-wide">
-                  Σφάλμα
-                </h3>
-                <p className="text-sm text-red-800 mt-1">{error}</p>
+        {/* Main Content Container */}
+        <div className="flex-grow py-10 space-y-8">
+
+          {/* Error Message - Text Only / No Icon */}
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-700 p-4">
+              <div className="flex">
+                <div>
+                  <h3 className="text-sm font-bold text-red-900 uppercase tracking-wide">
+                    Σφάλμα
+                  </h3>
+                  <p className="text-sm text-red-800 mt-1">{error}</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Organization Details */}
-        {selectedOrganization && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">
-                Στοιχεία Φορέα
-              </h2>
-              <FavoriteButton organization={selectedOrganization} showLabel />
+          {/* Organization Details */}
+          {selectedOrganization && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Στοιχεία Φορέα
+                </h2>
+                <FavoriteButton organization={selectedOrganization} showLabel />
+              </div>
+              <OrganizationCard organization={selectedOrganization} />
             </div>
-            <OrganizationCard organization={selectedOrganization} />
-          </div>
-        )}
+          )}
 
-        {/* Tree/Flow View */}
-        {selectedOrganization && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 gap-4">
-              <h2 className="text-2xl font-bold text-[#1b3d89]">
-                Οργανωτική Δομή
-              </h2>
-              <ViewToggle view={view} onViewChange={setView} />
-            </div>
+          {/* Tree/Flow View */}
+          {selectedOrganization && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 gap-4">
+                <h2 className="text-2xl font-bold text-[#1b3d89]">
+                  Οργανωτική Δομή
+                </h2>
+                <ViewToggle view={view} onViewChange={setView} />
+              </div>
 
-            {loadingTree ? (
-              <TreeSkeleton />
-            ) : organizationTree ? (
-              <div className="grid lg:grid-cols-1 gap-8">
-                <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
-                  <div className="min-w-max">
-                    {" "}
-                    {view === "tree" ? (
-                      <TreeView
-                        tree={organizationTree}
-                        onSelectUnit={handleSelectUnit}
-                        selectedUnitCode={selectedUnit?.code}
-                      />
+              {loadingTree ? (
+                <TreeSkeleton />
+              ) : organizationTree ? (
+                <div className="grid lg:grid-cols-1 gap-8">
+                  <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
+                    <div className="min-w-max">
+                      {" "}
+                      {view === "tree" ? (
+                        <TreeView
+                          tree={organizationTree}
+                          onSelectUnit={handleSelectUnit}
+                          selectedUnitCode={selectedUnit?.code}
+                        />
+                      ) : (
+                        <FlowDiagram
+                          tree={organizationTree}
+                          onSelectUnit={handleSelectUnit}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Unit Details Panel */}
+                  <div className="space-y-6 w-full min-w-0">
+                    {loadingUnit ? (
+                      <CardSkeleton />
+                    ) : selectedUnit ? (
+                      /* Προσθήκη wrapper με overflow-x-auto για να μην σπάει η σελίδα αν έχει πίνακες */
+                      <div className="w-full overflow-x-auto">
+                        <UnitDetails
+                          unit={selectedUnit}
+                          path={getPathArray(unitPath)}
+                        />
+                      </div>
                     ) : (
-                      <FlowDiagram
-                        tree={organizationTree}
-                        onSelectUnit={handleSelectUnit}
-                      />
+                      /* Responsive padding: p-6 στα κινητά, p-12 σε μεγάλες οθόνες */
+                      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
+                        <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
+                          Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
+                          αναλυτικές πληροφορίες
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Unit Details Panel */}
-                <div className="space-y-6 w-full min-w-0">
-                  {loadingUnit ? (
-                    <CardSkeleton />
-                  ) : selectedUnit ? (
-                    /* Προσθήκη wrapper με overflow-x-auto για να μην σπάει η σελίδα αν έχει πίνακες */
-                    <div className="w-full overflow-x-auto">
-                      <UnitDetails
-                        unit={selectedUnit}
-                        path={getPathArray(unitPath)}
-                      />
-                    </div>
-                  ) : (
-                    /* Responsive padding: p-6 στα κινητά, p-12 σε μεγάλες οθόνες */
-                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
-                      <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
-                        Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
-                        αναλυτικές πληροφορίες
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* Empty State - Text Only / No Icon */}
-        {!selectedOrganization && (
-          <div className="mt-12 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
-            <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
-              Καλώς ήρθατε στον ΣΔΑΔ Explorer
-            </h3>
-            <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
-              Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
-              επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* --- GOV.GR FOOTER --- */}
-      <footer className="govgr-footer">
-        <div className="govgr-width-container">
-          <div className="govgr-footer__meta">
-            <div className="govgr-footer__meta-item govgr-footer__meta-item--grow">
-              <div className="govgr-footer__content">
-                <p className="govgr-footer__licence-description">
-                  © Copyright 2026 - Υλοποίηση από{" "}
-                  <a
-                    href="https://gioiliop.eu"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="govgr-link"
-                  >
-                    Giorgos Iliopoulos
-                    <span className="sr-only">
-                      (ανοίγει σε καινούρια καρτέλα)
-                    </span>
-                  </a>
-                  <br />
-                  <span className="text-sm text-gray-500 mt-2 block">
-                    Δεδομένα από το Σύστημα Διαχείρισης Ανθρώπινου Δυναμικού
-                    (ΣΔΑΔ)
-                  </span>
-                </p>
-                <p className="italic text-sm text-gray-500 mt-2">
-                  *Η σελίδα αποτελεί προσωπικό project και δεν είναι επίσημη
-                  πλατφόρμα του gov.gr
-                </p>
-                <p className="italic text-[13px] text-gray-500 mt-2">
-                  **Τα αγαπημένα δεν αποθηκεύονται σε κάποια βάση δεδομένων,
-                  παρα μόνο μόνο τοπικά στον υπολογστή σας μέσω του localStorage
-                </p>
-              </div>
+              ) : null}
             </div>
-            <div className="govgr-footer__meta-item">
-              <p>Inspired by gov.gr look and feel</p>
-              <a
-                href="https://guide.services.gov.gr/"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="govgr-link"
-              >
-                Δείτε περισσότερα εδώ
-                <span className="sr-only">(ανοίγει σε καινούρια καρτέλα)</span>
-              </a>
+          )}
+
+          {/* Empty State - Text Only / No Icon */}
+          {!selectedOrganization && (
+            <div className="mt-12 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
+              <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
+                Καλώς ήρθατε στον ΣΔΑΔ Explorer
+              </h3>
+              <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
+                Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
+                επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
+              </p>
             </div>
-          </div>
+          )}
         </div>
-      </footer>
+      </div>
+      
       {/* Favorites Sidebar */}
       <FavoritesSidebar
         isOpen={showFavorites}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { FavoritesProvider } from "@/lib/FavoritesContext";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 // Configure Roboto font with Greek subset support
@@ -60,10 +62,14 @@ export default function RootLayout({
   return (
     <html lang="el">
       <body
-        className={`${roboto.variable} font-sans antialiased bg-gray-50 text-[#1a1a1a]`}
+        className={`
+          min-h-screen flex flex-col
+          ${roboto.variable} font-sans antialiased`}
       >
         <FavoritesProvider>
+          <Header />
           {children}
+          <Footer />
         </FavoritesProvider>
       </body>
     </html>

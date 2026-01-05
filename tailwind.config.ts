@@ -16,6 +16,7 @@ const config: Config = {
         // Custom Gov.gr palette
         gov: {
           blue: "#1b3d89", // Primary Brand Blue
+          blueLight: "#1f5e90", // Lighter Blue for Hover/Active States
           cyan: "#00aeef", // Bright Cyan (Borders/Accents)
           gold: "#e6ac00", // Warning/Highlight
           text: "#1a1a1a", // Standard Dark Text
