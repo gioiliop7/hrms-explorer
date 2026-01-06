@@ -1,7 +1,7 @@
 // components/TreeView.tsx
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronRight, ChevronDown, Building2 } from "lucide-react";
 import type { OrgmaMonadaTreeDto } from "@/types/api";
 import { exportTreeToCSV } from "@/lib/utils";
@@ -17,13 +17,48 @@ export default function TreeView({
   onSelectUnit,
   selectedUnitCode,
 }: TreeViewProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTree = useMemo(() => {
+    function filterTree(node: OrgmaMonadaTreeDto): OrgmaMonadaTreeDto | null {
+      const matches =
+        node.preferredLabel.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        node.code.toLowerCase().includes(searchTerm.toLowerCase());
+
+      if (node.children) {
+        const children = matches
+          ? node.children
+          : (node.children
+              .map(filterTree)
+              .filter(Boolean) as OrgmaMonadaTreeDto[]);
+
+        if (matches || children.length > 0) {
+          return { ...node, children };
+        }
+      } else if (matches) {
+        return node;
+      }
+
+      return matches ? node : null;
+    }
+
+    return searchTerm ? filterTree(tree) : tree;
+  }, [tree, searchTerm]);
+
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
       <div className="flex justify-between gap-3 flex-col md:flex-row my-5 md:my-0">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
           <Building2 className="h-5 w-5" />
           Ιεραρχική Δομή
         </h3>
+        <input
+          type="text"
+          placeholder="Αναζήτηση..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 w-full max-w-[300px] focus:ring-blue-500"
+        />
         <button
           onClick={() => exportTreeToCSV(tree)}
           className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
@@ -32,13 +67,19 @@ export default function TreeView({
         </button>
       </div>
 
-      <div className="overflow-auto max-h-[600px]">
-        <TreeNode
-          node={tree}
-          level={0}
-          onSelect={onSelectUnit}
-          selectedCode={selectedUnitCode}
-        />
+      <div className="overflow-auto max-h-[600px] my-8">
+        {filteredTree ? (
+          <TreeNode
+            node={filteredTree}
+            level={0}
+            onSelect={onSelectUnit}
+            selectedCode={selectedUnitCode}
+          />
+        ) : (
+          <div className="text-gray-500 text-sm p-3">
+            Δεν βρέθηκαν αποτελέσματα
+          </div>
+        )}
       </div>
     </div>
   );
