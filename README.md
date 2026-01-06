@@ -111,7 +111,7 @@ Make sure you have imported the CSS:
 
 ## 📝 License
 
-MIT
+Check LICENCE.md
 
 ---
 
