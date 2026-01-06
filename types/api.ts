@@ -28,6 +28,7 @@ export interface ResponseWrapper<T> {
   }
   
   export interface FMitrooForeasDto {
+    organizationType: number;
     code: string;
     preferredLabel: string;
     alternativeLabels?: string[];

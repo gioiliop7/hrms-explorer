@@ -10,7 +10,7 @@ import {
   Phone,
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
-import { formatDate } from "@/lib/utils";
+import { ENTITY_TYPE_MAP, formatDate, getUnitTypeLabel } from "@/lib/utils";
 
 interface OrganizationCardProps {
   organization: FMitrooForeasDto;
@@ -35,6 +35,9 @@ export default function OrganizationCard({
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             Κωδικός: {organization.code}
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Τύπος: {ENTITY_TYPE_MAP[organization.organizationType]}
           </p>
         </div>
       </div>
