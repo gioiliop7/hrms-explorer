@@ -11,7 +11,7 @@ You are permitted to:
 - Submit issues and pull requests via the official repository
 
 You are NOT permitted to:
-- Deploy this software (or any derivative work) to any public or private server
+- Deploy this software (or any derivative work) to any public server. Local server for personal use is accepted.
 - Use this software in production environments
 - Offer this software as a service (SaaS)
 - Distribute, sublicense, sell, or commercialize this software
