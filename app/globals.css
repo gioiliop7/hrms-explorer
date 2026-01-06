@@ -15,13 +15,16 @@
 }
 
 body {
-  color: var(--gov-text);
   background-color: var(--background);
 }
 
 button,
 a {
   cursor: pointer;
+}
+
+footer a{
+  color:var(--color-gov-blue)
 }
 
 /* Custom scrollbar */

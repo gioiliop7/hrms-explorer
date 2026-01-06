@@ -40,8 +40,8 @@ export default function Footer() {
           </div>
 
           {/* Right Section */}
-          <div>
-            <p>Inspired by gov.gr look and feel</p>
+          <div className="text-[12px] text-gray-400">
+            <p className="italic">Inspired by gov.gr look and feel</p>
             <a
               href="https://guide.services.gov.gr/"
               target="_blank"

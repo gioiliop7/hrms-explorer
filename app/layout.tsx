@@ -9,9 +9,9 @@ import "./globals.css";
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin", "greek"],
-  variable: "--font-roboto",
   display: "swap",
 });
+
 
 export const metadata: Metadata = {
   title: {
@@ -64,7 +64,7 @@ export default function RootLayout({
       <body
         className={`
           min-h-screen flex flex-col
-          ${roboto.variable} font-sans antialiased`}
+          ${roboto.className} antialiased`}
       >
         <FavoritesProvider>
           <Header />
