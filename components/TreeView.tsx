@@ -47,8 +47,8 @@ export default function TreeView({
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <div className="flex justify-between gap-3 flex-col md:flex-row my-5 md:my-0">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+      <div className="flex justify-between gap-3 flex-col md:flex-row my-5 md:my-0 items-center">
+        <h3 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
           <Building2 className="h-5 w-5" />
           Ιεραρχική Δομή
         </h3>
@@ -57,11 +57,11 @@ export default function TreeView({
           placeholder="Αναζήτηση..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 w-full max-w-[300px] focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 w-full max-w-75 focus:ring-blue-500"
         />
         <button
           onClick={() => exportTreeToCSV(tree)}
-          className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+          className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition max-w-75 text-gov-blue"
         >
           Εξαγωγή CSV
         </button>
