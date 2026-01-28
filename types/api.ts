@@ -99,7 +99,7 @@ export interface ResponseWrapper<T> {
     organizationCode: string;
     unitCode: string;
     type?: 'Organic' | 'Temporary';
-    employmentType?: number;
+    employmentType?:string;
     employeeCategory?: number;
     educationCategory?: number;
     professionCategory?: number;

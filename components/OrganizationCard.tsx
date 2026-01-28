@@ -1,4 +1,3 @@
-// components/OrganizationCard.tsx
 "use client";
 
 import {
@@ -8,16 +7,19 @@ import {
   Calendar,
   Mail,
   Phone,
+  Briefcase, // Import Briefcase icon
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
-import { ENTITY_TYPE_MAP, formatDate, getUnitTypeLabel } from "@/lib/utils";
+import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
 
 interface OrganizationCardProps {
   organization: FMitrooForeasDto;
+  onShowPositions: () => void; // New prop callback
 }
 
 export default function OrganizationCard({
   organization,
+  onShowPositions,
 }: OrganizationCardProps) {
   const address = organization.mainAddress;
   const fek = organization.foundationFek;
@@ -29,16 +31,29 @@ export default function OrganizationCard({
         <div className="p-3 bg-blue-100 rounded-lg">
           <Building2 className="h-8 w-8 text-blue-600" />
         </div>
-        <div className="flex-1">
-          <h2 className="text-sm md:text-2xl font-bold text-gray-900">
-            {organization.preferredLabel}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Κωδικός: {organization.code}
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Τύπος: {ENTITY_TYPE_MAP[organization.organizationType]}
-          </p>
+        <div className="flex-1 w-full">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <h2 className="text-sm md:text-2xl font-bold text-gray-900">
+                {organization.preferredLabel}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Κωδικός: {organization.code}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Τύπος: {ENTITY_TYPE_MAP[organization.organizationType]}
+              </p>
+            </div>
+
+            {/* View Positions Button */}
+            <button
+              onClick={onShowPositions}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors font-medium text-sm whitespace-nowrap"
+            >
+              <Briefcase className="h-4 w-4" />
+              <span>Θέσεις Εργασίας Φορέα</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -63,35 +78,37 @@ export default function OrganizationCard({
         )}
 
       {/* Contact Information */}
-      {organization.email && (
-        <div className="flex items-center gap-3">
-          <Mail className="h-5 w-5 text-gray-400" />
-          <div>
-            <p className="text-xs text-gray-500">Email</p>
-            <a
-              href={`mailto:${organization.email}`}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              {organization.email}
-            </a>
+      <div className="grid md:grid-cols-2 gap-4">
+        {organization.email && (
+          <div className="flex items-center gap-3">
+            <Mail className="h-5 w-5 text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500">Email</p>
+              <a
+                href={`mailto:${organization.email}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {organization.email}
+              </a>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {organization.telephone && (
-        <div className="flex items-center gap-3">
-          <Phone className="h-5 w-5 text-gray-400" />
-          <div>
-            <p className="text-xs text-gray-500">Τηλέφωνο</p>
-            <a
-              href={`tel:${organization.telephone}`}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              {organization.telephone}
-            </a>
+        {organization.telephone && (
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500">Τηλέφωνο</p>
+              <a
+                href={`tel:${organization.telephone}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {organization.telephone}
+              </a>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Address */}
       {address && (

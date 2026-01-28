@@ -9,6 +9,7 @@ import type {
   OrgmaPathDto,
   LexWithoutParentDto,
   LexWithParentDto,
+  OrgmaThesiDto,
 } from "@/types/api";
 
 // Use Next.js API routes to bypass CORS
@@ -164,4 +165,26 @@ export const dictionaryAPI = {
     fetchAPI<ResponseWrapper<LexWithParentDto[]>>(
       "/public/metadata/dictionary/Dimos"
     ),
+};
+
+export const positionsAPI = {
+  // Get positions for organization/unit
+  getPositions: (organizationCode?: string, unitCode?: string) =>
+    fetchAPI<ResponseWrapper<OrgmaThesiDto[]>>(
+      `/positions${buildQueryString({ organizationCode, unitCode })}`
+    ),
+
+  // Download job description PDF
+  getJobDescriptionPDF: async (positionCode: string) => {
+    const response = await fetch(
+      `${BASE_URL}/positions/${positionCode}/job-description`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return { data: blob };
+  },
 };

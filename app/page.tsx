@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
 import FlowDiagram from "@/components/FlowDiagram";
 import UnitDetails from "@/components/UnitDetails";
 import ViewToggle from "@/components/ViewToggle";
+import PositionsPanel from "@/components/PositionsPanel";
 import { CardSkeleton, TreeSkeleton } from "@/components/LoadingSkeleton";
 import { orgUnitsAPI, organizationAPI } from "@/lib/api";
 import type {
@@ -15,7 +16,6 @@ import type {
   OrgmaMonadaDto,
   OrgmaPathDto,
 } from "@/types/api";
-import { Suspense } from "react";
 import FavoritesSidebar from "@/components/FavouritesSidebar";
 import ComparisonView from "@/components/ComparisonView";
 import FavoriteButton from "@/components/FavoriteButton";
@@ -44,11 +44,17 @@ export default function Home() {
 
   const { addToRecent } = useFavoritesContext();
 
+  // Ref to scroll to positions panel
+  const positionsPanelRef = useRef<HTMLDivElement>(null);
+
   // Load organization tree when organization is selected
   useEffect(() => {
     if (selectedOrganization) {
       loadOrganizationTree(selectedOrganization.code);
       addToRecent(selectedOrganization);
+      // Reset selected unit when organization changes
+      setSelectedUnit(null);
+      setUnitPath(null);
     }
   }, [selectedOrganization]);
 
@@ -111,6 +117,27 @@ export default function Home() {
     }
   };
 
+  // Function to scroll to positions
+  const scrollToPositions = () => {
+    if (positionsPanelRef.current) {
+      positionsPanelRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Handle "View Organization Positions" button click
+  const handleViewOrgPositions = () => {
+    // Deselect unit to show organization-wide positions
+    setSelectedUnit(null);
+    // Use setTimeout to allow state update before scrolling
+    setTimeout(scrollToPositions, 100);
+  };
+
+  // Handle "View Unit Positions" button click
+  const handleViewUnitPositions = () => {
+    // Unit is already selected, just scroll
+    scrollToPositions();
+  };
+
   // Convert path to array for breadcrumbs
   const getPathArray = (
     path: OrgmaPathDto | null
@@ -131,7 +158,6 @@ export default function Home() {
   return (
     <main>
       <div className="container mx-auto px-4 flex-1 flex flex-col max-w-7xl">
-
         {/* Top Controls: Search and Action Buttons */}
         <TopControls
           setShowFavorites={setShowFavorites}
@@ -141,19 +167,14 @@ export default function Home() {
           selectedOrganization={selectedOrganization}
           setSelectedOrganization={setSelectedOrganization}
         />
-        
-        {/* Empty State - Text Only / No Icon */}
-        {!selectedOrganization && (
-          <WelcomeMessage />
-        )}
+
+        {/* Empty State */}
+        {!selectedOrganization && <WelcomeMessage />}
 
         {/* Main Content Container */}
         <div className="flex-grow py-10 space-y-8">
-
-          {/* Error Message - Text Only / No Icon */}
-          {error && (
-            <ErrorMessage message={error} />
-          )}
+          {/* Error Message */}
+          {error && <ErrorMessage message={error} />}
 
           {/* Statistics Dashboard */}
           {selectedOrganization && showStatistics && allUnits.length > 0 && (
@@ -174,7 +195,10 @@ export default function Home() {
                 </h2>
                 <FavoriteButton organization={selectedOrganization} showLabel />
               </div>
-              <OrganizationCard organization={selectedOrganization} />
+              <OrganizationCard
+                organization={selectedOrganization}
+                onShowPositions={handleViewOrgPositions}
+              />
             </div>
           )}
 
@@ -194,7 +218,6 @@ export default function Home() {
                 <div className="grid lg:grid-cols-1 gap-8">
                   <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
                     <div className="min-w-max">
-                      {" "}
                       {view === "tree" ? (
                         <TreeView
                           tree={organizationTree}
@@ -215,15 +238,14 @@ export default function Home() {
                     {loadingUnit ? (
                       <CardSkeleton />
                     ) : selectedUnit ? (
-                      /* Προσθήκη wrapper με overflow-x-auto για να μην σπάει η σελίδα αν έχει πίνακες */
                       <div className="w-full overflow-x-auto">
                         <UnitDetails
                           unit={selectedUnit}
                           path={getPathArray(unitPath)}
+                          onShowPositions={handleViewUnitPositions}
                         />
                       </div>
                     ) : (
-                      /* Responsive padding: p-6 στα κινητά, p-12 σε μεγάλες οθόνες */
                       <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
                         <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
                           Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
@@ -236,9 +258,26 @@ export default function Home() {
               ) : null}
             </div>
           )}
+
+          {/* Positions Panel */}
+          {selectedOrganization && (
+            <div className="space-y-4" ref={positionsPanelRef}>
+              <h2 className="text-2xl font-bold text-[#1b3d89]">
+                Θέσεις Εργασίας
+              </h2>
+              <PositionsPanel
+                key={`${selectedOrganization.code}-${
+                  selectedUnit?.code || "all"
+                }`}
+                organizationCode={selectedOrganization.code}
+                unitCode={selectedUnit?.code}
+                unitName={selectedUnit?.preferredLabel}
+              />
+            </div>
+          )}
         </div>
       </div>
-      
+
       {/* Favorites Sidebar */}
       <FavoritesSidebar
         isOpen={showFavorites}
@@ -257,6 +296,7 @@ export default function Home() {
   );
 }
 
+// ... existing helper components (WelcomeMessage, ErrorMessage, TopControls) remain unchanged ...
 // Separate component for Welcome Message
 function WelcomeMessage() {
   return (
@@ -269,13 +309,11 @@ function WelcomeMessage() {
         επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
       </p>
     </div>
-  )
+  );
 }
 
 // Separate component for Error Message
-function ErrorMessage({ message }: { 
-  message: string 
-}) {
+function ErrorMessage({ message }: { message: string }) {
   return (
     <div className="bg-red-50 border-l-4 border-red-700 p-4">
       <div className="flex">
