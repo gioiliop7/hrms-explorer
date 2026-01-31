@@ -7,14 +7,23 @@ import {
   Calendar,
   Mail,
   Phone,
-  Briefcase, // Import Briefcase icon
+  Briefcase,
+  Landmark,
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
 import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
 
+interface ExtendedOrganization extends FMitrooForeasDto {
+  elstat?: {
+    code: string;
+    description: string;
+    sheetName: string;
+  } | null;
+}
+
 interface OrganizationCardProps {
-  organization: FMitrooForeasDto;
-  onShowPositions: () => void; // New prop callback
+  organization: ExtendedOrganization;
+  onShowPositions: () => void;
 }
 
 export default function OrganizationCard({
@@ -56,6 +65,27 @@ export default function OrganizationCard({
           </div>
         </div>
       </div>
+
+      {organization.elstat && (
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-start gap-3">
+          <div className="p-1.5 bg-white rounded-md border border-slate-100 shadow-sm">
+            <Landmark className="h-5 w-5 text-slate-600" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Μητρώο Φορέων Γενικής Κυβέρνησης (ΕΛΣΤΑΤ)
+            </p>
+            <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+              <span className="font-medium text-slate-900">
+                {organization.elstat.description}
+              </span>
+              <span className="text-xs px-2 py-0.5 bg-slate-200 text-slate-700 rounded-full font-mono">
+                {organization.elstat.code}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Alternative Labels */}
       {organization.alternativeLabels &&
