@@ -12,14 +12,13 @@ const roboto = Roboto({
   display: "swap",
 });
 
-
 export const metadata: Metadata = {
   title: {
     template: "%s",
-    default: "ΣΔΑΔ Explorer", // SDAD Explorer
+    default: "The Greek Extended Registry",
   },
   description:
-    "Εξερευνητής Οργανογραμμάτων & Θέσεων του Συστήματος Διαχείρισης Ανθρώπινου Δυναμικού (ΣΔΑΔ).",
+    "Εξερευνητής Οργανογραμμάτων, θέσεων εργασίας αλλα και άλλων πληροφοριών φορέων του δημοσίου.",
   keywords: [
     "ΣΔΑΔ",
     "Δημόσιο",
@@ -28,10 +27,11 @@ export const metadata: Metadata = {
     "Υπουργείο Ψηφιακής Διακυβέρνησης",
     "APOGRAFI",
     "HRMS",
+    "ΔΙΑΥΓΕΙΑ",
+    "ΑΑΔΕ",
+    "ΕΛΣΤΑΤ",
   ],
-  authors: [
-    { name: "Giorgos Iliopoulos", url: "https://gioiliop.eu" },
-  ],
+  authors: [{ name: "Giorgos Iliopoulos", url: "https://gioiliop.eu" }],
   creator: "Giorgos Iliopoulos",
   publisher: "Giorgos Iliopoulos",
   robots: {
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "el_GR",
-    url: "https://hrmsgov.gioiliop.eu",
-    title: "ΣΔΑΔ Explorer",
+    url: "https://hrgov.gioiliop.eu",
+    title: "The Greek Extended Registry",
     description:
       "Διαδραστική απεικόνιση της οργανωτικής δομής και των θέσεων του Δημοσίου Τομέα.",
     siteName: "Gov.gr Services",

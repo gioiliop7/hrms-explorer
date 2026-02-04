@@ -9,9 +9,30 @@ import {
   Phone,
   Briefcase,
   Landmark,
+  Building,
+  UserCheck,
+  Shield,
+  Hash,
+  CalendarDays,
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
 import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
+
+interface GsisData {
+  aahtCode: string;
+  aahtAfm: string;
+  aahtName: string;
+  authority: string;
+  authorityType: string;
+  supervisor: string;
+  ministry: string;
+  clearingServiceCode: string;
+  clearingService: string;
+  aahtCodeStartDate: string;
+  aahtCodeEndDate: string;
+  clearingServiceConnectionStartDate: string;
+  clearingServiceConnectionEndDate: string;
+}
 
 interface ExtendedOrganization extends FMitrooForeasDto {
   elstat?: {
@@ -19,6 +40,7 @@ interface ExtendedOrganization extends FMitrooForeasDto {
     description: string;
     sheetName: string;
   } | null;
+  gsis?: GsisData[] | null;
 }
 
 interface OrganizationCardProps {
@@ -32,6 +54,7 @@ export default function OrganizationCard({
 }: OrganizationCardProps) {
   const address = organization.mainAddress;
   const fek = organization.foundationFek;
+  console.log(organization)
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-4">
@@ -66,6 +89,7 @@ export default function OrganizationCard({
         </div>
       </div>
 
+      {/* ELSTAT Info */}
       {organization.elstat && (
         <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-start gap-3">
           <div className="p-1.5 bg-white rounded-md border border-slate-100 shadow-sm">
@@ -82,6 +106,209 @@ export default function OrganizationCard({
               <span className="text-xs px-2 py-0.5 bg-slate-200 text-slate-700 rounded-full font-mono">
                 {organization.elstat.code}
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GSIS Info */}
+      
+      {organization.gsis && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 bg-white rounded-md border border-emerald-100 shadow-sm">
+              <Shield className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-3">
+                Στοιχεία ΓΓΠΣ (Γενική Γραμματεία Πληροφοριακών Συστημάτων)
+              </p>
+
+              {organization.gsis.map((gsis, idx) => (
+                <div
+                  key={idx}
+                  className={`${
+                    idx > 0 ? "mt-3 pt-3 border-t border-emerald-200" : ""
+                  }`}
+                >
+                  {/* Primary Info */}
+                  <div className="grid md:grid-cols-2 gap-3 mb-3">
+                    <div className="flex items-start gap-2">
+                      <Hash className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-emerald-600 font-medium">
+                          Κωδικός ΑΑΔΕ
+                        </p>
+                        <p className="text-sm font-mono text-gray-900">
+                          {gsis.aahtCode}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-emerald-600 font-medium">
+                          ΑΦΜ
+                        </p>
+                        <p className="text-sm font-mono text-gray-900">
+                          {gsis.aahtAfm}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Organization Details */}
+                  <div className="space-y-2">
+                    {gsis.aahtName && (
+                      <div className="flex items-start gap-2">
+                        <Building className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Επωνυμία ΑΑΔΕ
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.aahtName}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {gsis.authority && (
+                      <div className="flex items-start gap-2">
+                        <UserCheck className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Αρχή
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.authority}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {gsis.authorityType && (
+                      <div className="flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Τύπος Αρχής
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.authorityType}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {gsis.supervisor && (
+                      <div className="flex items-start gap-2">
+                        <UserCheck className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Εποπτεύουσα Αρχή
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.supervisor}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {gsis.ministry && (
+                      <div className="flex items-start gap-2">
+                        <Landmark className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Υπουργείο
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.ministry}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {gsis.clearingService && (
+                      <div className="flex items-start gap-2">
+                        <Building2 className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-emerald-600 font-medium">
+                            Υπηρεσία Εκκαθάρισης
+                          </p>
+                          <p className="text-sm text-gray-900">
+                            {gsis.clearingService}
+                            {gsis.clearingServiceCode && (
+                              <span className="ml-2 text-xs font-mono bg-emerald-100 px-2 py-0.5 rounded">
+                                {gsis.clearingServiceCode}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dates Section */}
+                    {(gsis.aahtCodeStartDate ||
+                      gsis.aahtCodeEndDate ||
+                      gsis.clearingServiceConnectionStartDate ||
+                      gsis.clearingServiceConnectionEndDate) && (
+                      <div className="mt-3 pt-3 border-t border-emerald-200">
+                        <p className="text-xs text-emerald-600 font-semibold mb-2">
+                          Ημερομηνίες
+                        </p>
+                        <div className="grid md:grid-cols-2 gap-2 text-xs">
+                          {gsis.aahtCodeStartDate && (
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-3 w-3 text-emerald-500" />
+                              <span className="text-emerald-600">
+                                Έναρξη Κωδικού:
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                {gsis.aahtCodeStartDate}
+                              </span>
+                            </div>
+                          )}
+                          {gsis.aahtCodeEndDate && (
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-3 w-3 text-emerald-500" />
+                              <span className="text-emerald-600">
+                                Λήξη Κωδικού:
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                {gsis.aahtCodeEndDate}
+                              </span>
+                            </div>
+                          )}
+                          {gsis.clearingServiceConnectionStartDate && (
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-3 w-3 text-emerald-500" />
+                              <span className="text-emerald-600">
+                                Έναρξη Σύνδεσης:
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                {gsis.clearingServiceConnectionStartDate}
+                              </span>
+                            </div>
+                          )}
+                          {gsis.clearingServiceConnectionEndDate && (
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-3 w-3 text-emerald-500" />
+                              <span className="text-emerald-600">
+                                Λήξη Σύνδεσης:
+                              </span>
+                              <span className="text-gray-900 font-medium">
+                                {gsis.clearingServiceConnectionEndDate}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

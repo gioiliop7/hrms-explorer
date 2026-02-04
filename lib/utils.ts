@@ -985,4 +985,3 @@ export const getEmployeeCategoryDescription = (
 
   return employeeCategoriesMap.get(id) || `Άγνωστη Κατηγορία (${code})`;
 };
-

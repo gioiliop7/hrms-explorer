@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import path from "path";
 import { promises as fs } from "fs";
+import { getGsisData } from "@/lib/gsisHelper";
 
 const BASE_URL = "https://hrms.gov.gr/api";
 
@@ -95,7 +96,6 @@ export async function GET(
               return excelName === searchName;
             });
 
-
             if (found) {
               elstatInfo = {
                 code: sector.code, // Use the explicit code (e.g. S1311-HOSP)
@@ -113,7 +113,10 @@ export async function GET(
       console.error("Error processing Excel logic:", err);
     }
 
+    const gsisInfo = await getGsisData(data.data.preferredLabel);
+
     data.data.elstat = elstatInfo;
+    data.data.gsis = gsisInfo;
 
     return NextResponse.json(data);
   } catch (error) {

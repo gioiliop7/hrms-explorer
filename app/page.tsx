@@ -302,11 +302,12 @@ function WelcomeMessage() {
   return (
     <div className="mt-6 p-12 bg-white border border-gray-200 shadow-sm rounded-sm text-center">
       <h3 className="text-2xl font-bold text-[#1b3d89] mb-4">
-        Καλώς ήρθατε στον ΣΔΑΔ Explorer
+        Καλώς ήρθατε στο The Greek Extended Registry
       </h3>
       <p className="text-gray-600 max-w-xl mx-auto text-lg leading-relaxed">
         Αναζητήστε έναν φορέα του Δημοσίου παραπάνω για να εξερευνήσετε το
-        επίσημο οργανόγραμμα και τις θέσεις εργασίας του.
+        επίσημο οργανόγραμμα, τις θέσεις εργασίας του αλλα και πολλαπλές άλλες
+        πληροφορίες μέσω απο διάφορα μητρώα του Δημοσίου
       </p>
     </div>
   );
