@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { FavoritesProvider } from "@/lib/FavoritesContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -71,6 +72,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </FavoritesProvider>
+        <Analytics />
       </body>
     </html>
   );
