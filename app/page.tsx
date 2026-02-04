@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
@@ -20,12 +20,19 @@ import FavoritesSidebar from "@/components/FavouritesSidebar";
 import ComparisonView from "@/components/ComparisonView";
 import FavoriteButton from "@/components/FavoriteButton";
 import StatisticsCard from "@/components/StatisticsCard";
-import { BarChart3, Star } from "lucide-react";
+import { BarChart3, Loader2, Star } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
+import { fetchDiavgeiaAction } from "@/lib/actions";
+
+interface ExtendedOrganization extends FMitrooForeasDto {
+  elstat?: any;
+  gsis?: any;
+  diavgeia?: any;
+}
 
 export default function Home() {
   const [selectedOrganization, setSelectedOrganization] =
-    useState<FMitrooForeasDto | null>(null);
+    useState<ExtendedOrganization | null>(null);
   const [organizationTree, setOrganizationTree] =
     useState<OrgmaMonadaTreeDto | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<OrgmaMonadaDto | null>(null);
@@ -35,6 +42,9 @@ export default function Home() {
   const [loadingTree, setLoadingTree] = useState(false);
   const [loadingUnit, setLoadingUnit] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // New State for Diavgeia loading
+  const [loadingDiavgeia, setLoadingDiavgeia] = useState(false);
 
   // New state for features
   const [showFavorites, setShowFavorites] = useState(false);
@@ -47,16 +57,47 @@ export default function Home() {
   // Ref to scroll to positions panel
   const positionsPanelRef = useRef<HTMLDivElement>(null);
 
-  // Load organization tree when organization is selected
-  useEffect(() => {
-    if (selectedOrganization) {
-      loadOrganizationTree(selectedOrganization.code);
-      addToRecent(selectedOrganization);
-      // Reset selected unit when organization changes
-      setSelectedUnit(null);
-      setUnitPath(null);
+  /**
+   * Κεντρική συνάρτηση επιλογής φορέα.
+   * Καλείται από το SearchBar και από τα Favorites.
+   */
+  const handleOrganizationSelect = async (org: FMitrooForeasDto) => {
+    // 1. Αρχικοποίηση State με τα βασικά δεδομένα
+    const initialOrgState: ExtendedOrganization = {
+      ...org,
+      diavgeia: null,
+    };
+
+    setSelectedOrganization(initialOrgState);
+
+    // Reset επιλογών δέντρου
+    setSelectedUnit(null);
+    setUnitPath(null);
+
+    addToRecent(org);
+
+    loadOrganizationTree(org.code);
+
+    setLoadingDiavgeia(true);
+    try {
+      const diavgeiaData = await fetchDiavgeiaAction(org.preferredLabel);
+
+      if (diavgeiaData) {
+        setSelectedOrganization((prev) => {
+          if (!prev || prev.code !== org.code) return prev;
+
+          return {
+            ...prev,
+            diavgeia: diavgeiaData,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching Diavgeia data:", err);
+    } finally {
+      setLoadingDiavgeia(false);
     }
-  }, [selectedOrganization]);
+  };
 
   const loadOrganizationTree = async (organizationCode: string) => {
     setLoadingTree(true);
@@ -80,7 +121,7 @@ export default function Home() {
   const handleSelectByCode = async (code: string) => {
     try {
       const response = await organizationAPI.getByCode(code);
-      setSelectedOrganization(response.data.data);
+      handleOrganizationSelect(response.data.data);
     } catch (error) {
       console.error("Error loading organization:", error);
       setError("Σφάλμα κατά τη φόρτωση του φορέα");
@@ -91,10 +132,11 @@ export default function Home() {
     setLoadingUnit(true);
     setError(null);
 
+    if (!selectedOrganization) return;
+
     try {
-      // Load unit details
       const unitsResponse = await orgUnitsAPI.getUnits(
-        selectedOrganization!.code
+        selectedOrganization.code
       );
       const unit = unitsResponse.data.data.find((u) => u.code === unitCode);
 
@@ -165,7 +207,7 @@ export default function Home() {
           setShowComparison={setShowComparison}
           showStatistics={showStatistics}
           selectedOrganization={selectedOrganization}
-          setSelectedOrganization={setSelectedOrganization}
+          onSelectOrganization={handleOrganizationSelect}
         />
 
         {/* Empty State */}
@@ -190,9 +232,17 @@ export default function Home() {
           {selectedOrganization && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Στοιχεία Φορέα
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Στοιχεία Φορέα
+                  </h2>
+                  {loadingDiavgeia && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Διαύγεια...</span>
+                    </div>
+                  )}
+                </div>
                 <FavoriteButton organization={selectedOrganization} showLabel />
               </div>
               <OrganizationCard
@@ -296,7 +346,6 @@ export default function Home() {
   );
 }
 
-// ... existing helper components (WelcomeMessage, ErrorMessage, TopControls) remain unchanged ...
 // Separate component for Welcome Message
 function WelcomeMessage() {
   return (
@@ -336,21 +385,21 @@ function TopControls({
   setShowComparison,
   showStatistics,
   selectedOrganization,
-  setSelectedOrganization,
+  onSelectOrganization,
 }: {
   setShowFavorites: (v: boolean) => void;
   setShowStatistics: (v: boolean) => void;
   setShowComparison: (v: boolean) => void;
   showStatistics: boolean;
   selectedOrganization: FMitrooForeasDto | null;
-  setSelectedOrganization: (org: FMitrooForeasDto | null) => void;
+  onSelectOrganization: (org: FMitrooForeasDto) => void;
 }) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 gap-4 w-full">
       {/* Search Section */}
       <div className="w-full">
         <Suspense fallback={<div>Loading...</div>}>
-          <SearchBar onSelectOrganization={setSelectedOrganization} />
+          <SearchBar onSelectOrganization={onSelectOrganization} />
         </Suspense>
       </div>
 

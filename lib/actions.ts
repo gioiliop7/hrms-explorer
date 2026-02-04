@@ -3,6 +3,7 @@
 
 import path from "path";
 import { promises as fs } from "fs";
+import { getDiavgeiaData } from "./diavgeia";
 
 const FILES = ["1.json", "2.json"];
 
@@ -36,4 +37,14 @@ export async function getDescriptionById(id: number | string) {
   const searchId = Number(id);
   const foundItem = data.find((item: any) => item.id === searchId);
   return foundItem ? foundItem.description : null;
+}
+
+export async function fetchDiavgeiaAction(name: string) {
+  try {
+    const data = await getDiavgeiaData(name);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch Diavgeia data via Server Action", error);
+    return null;
+  }
 }

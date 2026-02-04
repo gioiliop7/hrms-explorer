@@ -14,9 +14,15 @@ import {
   Shield,
   Hash,
   CalendarDays,
+  Globe,
+  ExternalLink,
+  Eye,
+  Network, // Added for Units
+  Gavel, // Added for Decisions
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
 import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
+import { getFekLabel } from "@/lib/diavgeia";
 
 interface GsisData {
   aahtCode: string;
@@ -34,6 +40,51 @@ interface GsisData {
   clearingServiceConnectionEndDate: string;
 }
 
+interface DiavgeiaUnit {
+  uid: string;
+  label: string;
+}
+
+interface DiavgeiaDecision {
+  ada: string;
+  protocolNumber: string;
+  subject: string;
+  issueDate: string;
+  documentUrl: string;
+  organizationLabel: string;
+  decisionTypeLabel: string;
+  status: string;
+}
+
+interface DiavgeiaData {
+  fekYear: string;
+  fekNumber: any;
+  fekType: string;
+  uid: string;
+  label: string;
+  status?: string;
+  category?: string;
+  latinLabel?: string;
+  abbr?: string;
+  supervised?: boolean;
+  vatNumber?: string;
+  organizationId?: string;
+  website?: string;
+  email?: string;
+  fax?: string;
+  telephone?: string;
+  address?: {
+    poBox: any;
+    country: any;
+    postalCode?: string;
+    city?: string;
+    streetName?: string;
+    streetNumber?: string;
+  };
+  units?: DiavgeiaUnit[];
+  latestDecisions?: DiavgeiaDecision[];
+}
+
 interface ExtendedOrganization extends FMitrooForeasDto {
   elstat?: {
     code: string;
@@ -41,6 +92,7 @@ interface ExtendedOrganization extends FMitrooForeasDto {
     sheetName: string;
   } | null;
   gsis?: GsisData[] | null;
+  diavgeia?: DiavgeiaData | null;
 }
 
 interface OrganizationCardProps {
@@ -54,7 +106,6 @@ export default function OrganizationCard({
 }: OrganizationCardProps) {
   const address = organization.mainAddress;
   const fek = organization.foundationFek;
-  console.log(organization)
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-4">
@@ -112,8 +163,7 @@ export default function OrganizationCard({
       )}
 
       {/* GSIS Info */}
-      
-      {organization.gsis && (
+      {organization.gsis && organization.gsis.length > 0 && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="p-1.5 bg-white rounded-md border border-emerald-100 shadow-sm">
@@ -309,6 +359,316 @@ export default function OrganizationCard({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Diavgeia Info */}
+      {organization.diavgeia && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 bg-white rounded-md border border-indigo-100 shadow-sm">
+              <Eye className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-3">
+                Στοιχεία Διαύγειας (Πρόγραμμα Διαύγεια)
+              </p>
+
+              {/* Primary Info */}
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <Hash className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-indigo-600 font-medium">
+                      UID Διαύγειας
+                    </p>
+                    <p className="text-sm font-mono text-gray-900">
+                      {organization.diavgeia.uid}
+                    </p>
+                  </div>
+                </div>
+
+                {organization.diavgeia.label && (
+                  <div className="flex items-start gap-2">
+                    <Building className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Επωνυμία Διαύγειας
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {organization.diavgeia.label}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.latinLabel && (
+                  <div className="flex items-start gap-2">
+                    <Building className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Λατινική Επωνυμία
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {organization.diavgeia.latinLabel}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.abbr && (
+                  <div className="flex items-start gap-2">
+                    <FileText className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Συντομογραφία
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {organization.diavgeia.abbr}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.category && (
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Κατηγορία
+                      </p>
+                      <p className="text-sm text-gray-900">
+                        {organization.diavgeia.category}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.status && (
+                  <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full ${
+                          organization.diavgeia.status === "ACTIVE"
+                            ? "bg-green-500"
+                            : "bg-gray-400"
+                        }`}
+                      ></span>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Κατάσταση
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-900">
+                      {organization.diavgeia.status}
+                    </p>
+                  </div>
+                )}
+
+                {organization.diavgeia.vatNumber && (
+                  <div className="flex items-start gap-2">
+                    <Hash className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">ΑΦΜ</p>
+                      <p className="text-sm font-mono text-gray-900">
+                        {organization.diavgeia.vatNumber}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.organizationId && (
+                  <div className="flex items-start gap-2">
+                    <Hash className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-indigo-600 font-medium">
+                        Organization ID
+                      </p>
+                      <p className="text-sm font-mono text-gray-900">
+                        {organization.diavgeia.organizationId}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                {(organization.diavgeia.email ||
+                  organization.diavgeia.telephone ||
+                  organization.diavgeia.fax ||
+                  organization.diavgeia.website) && (
+                  <div className="mt-3 pt-3 border-t border-indigo-200">
+                    <p className="text-xs text-indigo-600 font-semibold mb-2">
+                      Στοιχεία Επικοινωνίας
+                    </p>
+                    <div className="space-y-2">
+                      {organization.diavgeia.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3 w-3 text-indigo-500" />
+                          <a
+                            href={`mailto:${organization.diavgeia.email}`}
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {organization.diavgeia.email}
+                          </a>
+                        </div>
+                      )}
+                      {organization.diavgeia.telephone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-3 w-3 text-indigo-500" />
+                          <a
+                            href={`tel:${organization.diavgeia.telephone}`}
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {organization.diavgeia.telephone}
+                          </a>
+                        </div>
+                      )}
+                      {organization.diavgeia.fax && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-3 w-3 text-indigo-500" />
+                          <span className="text-gray-900">
+                            Fax: {organization.diavgeia.fax}
+                          </span>
+                        </div>
+                      )}
+                      {organization.diavgeia.website && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Globe className="h-3 w-3 text-indigo-500" />
+                          <a
+                            href={organization.diavgeia.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline flex items-center gap-1"
+                          >
+                            {organization.diavgeia.website}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* === NEW SECTION: Organization Units (Μονάδες) === */}
+                {organization.diavgeia.units &&
+                  organization.diavgeia.units.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-indigo-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Network className="h-4 w-4 text-indigo-600" />
+                        <p className="text-xs text-indigo-600 font-semibold">
+                          Οργανωτικές Μονάδες στη Διαύγεια (
+                          {organization.diavgeia.units.length})
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                        {organization.diavgeia.units.map((unit) => (
+                          <span
+                            key={unit.uid}
+                            className="inline-flex items-center px-2.5 py-1 rounded-md bg-white border border-indigo-100 text-xs text-indigo-700 shadow-sm"
+                            title={`UID: ${unit.uid}`}
+                          >
+                            {unit.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* === NEW SECTION: Recent Decisions (Αποφάσεις) === */}
+                {organization.diavgeia.latestDecisions &&
+                  organization.diavgeia.latestDecisions.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-indigo-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Gavel className="h-4 w-4 text-indigo-600" />
+                        <p className="text-xs text-indigo-600 font-semibold">
+                          Πρόσφατες Αποφάσεις
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {organization.diavgeia.latestDecisions.map(
+                          (decision) => (
+                            <div
+                              key={decision.ada}
+                              className="flex flex-col bg-white border border-indigo-100 rounded-md p-2.5 shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <a
+                                  href={decision.documentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1"
+                                >
+                                  {decision.ada}
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                                <span className="text-xs text-gray-500 whitespace-nowrap">
+                                  {decision.issueDate.split(" ")[0]}
+                                </span>
+                              </div>
+                              <p
+                                className="text-xs text-gray-700 mt-1 line-clamp-2"
+                                title={decision.subject}
+                              >
+                                {decision.subject}
+                              </p>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Address */}
+                {organization.diavgeia.address && (
+                  <div className="mt-3 pt-3 border-t border-indigo-200">
+                    <p className="text-xs text-indigo-600 font-semibold mb-2">
+                      Διεύθυνση
+                    </p>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-gray-900">
+                        {[
+                          organization.diavgeia.address.country,
+                          organization.diavgeia.address.streetNumber,
+                          organization.diavgeia.address.streetName,
+                          organization.diavgeia.address.city,
+                          organization.diavgeia.address.poBox,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {organization.diavgeia.fekNumber && (
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">ΦΕΚ Σύστασης</p>
+                      <p className="text-sm text-gray-900">
+                        {getFekLabel(organization.diavgeia.fekType)}{" "}
+                        {organization.diavgeia.fekNumber}/
+                        {organization.diavgeia.fekYear}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Link to Diavgeia */}
+                <div className="mt-3 pt-3 border-t border-indigo-200">
+                  <a
+                    href={`https://diavgeia.gov.gr/f/${organization.diavgeia.latinLabel}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Προβολή στη Διαύγεια
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
