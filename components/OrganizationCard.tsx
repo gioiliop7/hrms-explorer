@@ -19,10 +19,19 @@ import {
   Eye,
   Network, // Added for Units
   Gavel, // Added for Decisions
+  ClipboardList,
+  ChevronRight,
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
 import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
 import { getFekLabel } from "@/lib/diavgeia";
+import { useState } from "react";
+
+interface MitosProcess {
+  id: string;
+  title: string;
+  link: string | null;
+}
 
 interface GsisData {
   aahtCode: string;
@@ -93,6 +102,10 @@ interface ExtendedOrganization extends FMitrooForeasDto {
   } | null;
   gsis?: GsisData[] | null;
   diavgeia?: DiavgeiaData | null;
+  mitos?: {
+    total: number;
+    procedures: MitosProcess[];
+  } | null;
 }
 
 interface OrganizationCardProps {
@@ -104,6 +117,7 @@ export default function OrganizationCard({
   organization,
   onShowPositions,
 }: OrganizationCardProps) {
+  const [activeTab, setActiveTab] = useState<"info" | "mitos">("info");
   const address = organization.mainAddress;
   const fek = organization.foundationFek;
 
@@ -673,6 +687,66 @@ export default function OrganizationCard({
           </div>
         </div>
       )}
+      {organization.mitos && organization.mitos.total > 0 && (
+        <>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-orange-500" />
+                  Εθνικό Μητρώο Διαδικασιών
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Ψηφιακές και χειρόγραφες διαδικασίες που ανήκουν στον φορέα
+                </p>
+              </div>
+              <a
+                href={`https://mitos.gov.gr/index.php/%CE%95%CE%B9%CE%B4%CE%B9%CE%BA%CF%8C:EMDViewOrg?org=${organization.code}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-orange-600 hover:underline flex items-center gap-1 font-medium"
+              >
+                Πηγή: mitos.gov.gr <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+
+            {!organization.mitos ? (
+              <div className="py-12 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <p className="text-gray-400">
+                  Δεν βρέθηκαν διαθέσιμες διαδικασίες ή η φόρτωση εκκρεμεί.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                {organization.mitos.procedures.map((proc) => (
+                  <a
+                    key={proc.id}
+                    href={proc.link || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-3 p-3 bg-white border border-gray-100 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm"
+                  >
+                    <div className="shrink-0 w-8 h-8 bg-orange-100 text-orange-600 rounded flex items-center justify-center text-[10px] font-mono font-bold group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                      {proc.id.slice(-4)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-orange-900">
+                        {proc.title}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-gray-400 italic">
+                          ID: {proc.id}
+                        </span>
+                        <ChevronRight className="h-3 w-3 text-orange-300 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Alternative Labels */}
       {organization.alternativeLabels &&
@@ -727,62 +801,85 @@ export default function OrganizationCard({
         )}
       </div>
 
-      {/* Address */}
-      {address && (
-        <div className="border-t pt-4">
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Διεύθυνση</p>
-              <p className="text-sm text-gray-900">
-                {address.fullAddress ? address.fullAddress : "-"}
-              </p>
+      {/* Address Info */}
+      {address && address.fullAddress && (
+        <div className="border-t border-gray-100 pt-6">
+          <div className="group flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-transparent hover:border-red-100 hover:bg-red-50/50 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 group-hover:text-red-600 transition-colors">
+                <MapPin className="h-5 w-5 text-gray-400 group-hover:text-red-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Έδρα Φορέα
+                </p>
+                <p className="text-sm font-semibold text-gray-900 leading-tight">
+                  {address.fullAddress}
+                </p>
+              </div>
             </div>
+
+            {/* Google Maps Shortcut */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                address.fullAddress
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-white rounded-lg transition-all"
+              title="Άνοιγμα στους Χάρτες"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
           </div>
         </div>
       )}
-
       {/* Foundation Info */}
-      <div className="grid md:grid-cols-2 gap-4 border-t pt-4">
-        {fek && (
-          <div className="flex items-start gap-3">
-            <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-xs text-gray-500 mb-1">ΦΕΚ Σύστασης</p>
-              <p className="text-sm text-gray-900">
-                {fek.issue} {fek.number}/{fek.year}
-              </p>
+      {(fek || organization.foundationDate) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-6">
+          {fek && (
+            <div className="group flex items-center gap-4 p-3 rounded-xl bg-gray-50 border border-transparent hover:border-blue-100 hover:bg-blue-50/50 transition-all">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 group-hover:text-blue-600 transition-colors">
+                <FileText className="h-5 w-5 text-gray-400 group-hover:text-blue-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  ΦΕΚ Σύστασης
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {fek.issue} {fek.number}{" "}
+                  <span className="text-gray-400 mx-0.5">/</span> {fek.year}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {organization.foundationDate && (
-          <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Ημερομηνία Σύστασης</p>
-              <p className="text-sm text-gray-900">
-                {formatDate(organization.foundationDate)}
-              </p>
+          {organization.foundationDate && (
+            <div className="group flex items-center gap-4 p-3 rounded-xl bg-gray-50 border border-transparent hover:border-emerald-100 hover:bg-emerald-50/50 transition-all">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 group-hover:text-emerald-600 transition-colors">
+                <Calendar className="h-5 w-5 text-gray-400 group-hover:text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Ημερομηνία Σύστασης
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formatDate(organization.foundationDate)}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* Dates */}
-      <div className="grid md:grid-cols-2 gap-4 border-t pt-4 text-xs text-gray-500">
-        {organization.organizationStructureUpdateDate && (
-          <div>
-            <span className="font-medium">Οριστικοποίηση Οργανογράμματος:</span>{" "}
-            {formatDate(organization.organizationStructureUpdateDate)}
-          </div>
-        )}
-        {organization.updateDate && (
-          <div>
-            <span className="font-medium">Τελευταία Ενημέρωση:</span>{" "}
-            {formatDate(organization.updateDate)}
-          </div>
-        )}
+      <div className="bg-gray-50 px-6 py-3 border-t grid grid-cols-2 gap-4 text-[10px] text-gray-400">
+        <p>
+          Οριστικοποίηση:{" "}
+          {formatDate(organization.organizationStructureUpdateDate)}
+        </p>
+        <p className="text-right">
+          Ενημέρωση: {formatDate(organization.updateDate)}
+        </p>
       </div>
     </div>
   );

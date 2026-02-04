@@ -28,6 +28,10 @@ interface ExtendedOrganization extends FMitrooForeasDto {
   elstat?: any;
   gsis?: any;
   diavgeia?: any;
+  mitos?: null | {
+    total: number;
+    procedures: any[];
+  };
 }
 
 export default function Home() {
@@ -57,20 +61,16 @@ export default function Home() {
   // Ref to scroll to positions panel
   const positionsPanelRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Κεντρική συνάρτηση επιλογής φορέα.
-   * Καλείται από το SearchBar και από τα Favorites.
-   */
+  const [loadingMitos, setLoadingMitos] = useState(false);
   const handleOrganizationSelect = async (org: FMitrooForeasDto) => {
-    // 1. Αρχικοποίηση State με τα βασικά δεδομένα
     const initialOrgState: ExtendedOrganization = {
       ...org,
       diavgeia: null,
+      mitos: null,
     };
 
     setSelectedOrganization(initialOrgState);
 
-    // Reset επιλογών δέντρου
     setSelectedUnit(null);
     setUnitPath(null);
 
@@ -97,6 +97,29 @@ export default function Home() {
     } finally {
       setLoadingDiavgeia(false);
     }
+
+    // --- MITOS FETCH (Το νέο κομμάτι) ---
+    setLoadingMitos(true);
+    try {
+      const response = await fetch(`/api/organizations/${org.code}`);
+      if (response.ok) {
+        const fullData = await response.json();
+
+        setSelectedOrganization((prev) => {
+          if (!prev || prev.code !== org.code) return prev;
+          return {
+            ...prev,
+            elstat: fullData.data.elstat,
+            gsis: fullData.data.gsis,
+            mitos: fullData.data.mitos,
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching Mitos/Registry data:", err);
+    } finally {
+      setLoadingMitos(false);
+    }
   };
 
   const loadOrganizationTree = async (organizationCode: string) => {
@@ -117,7 +140,6 @@ export default function Home() {
     }
   };
 
-  // Handle selecting organization by code (from favorites)
   const handleSelectByCode = async (code: string) => {
     try {
       const response = await organizationAPI.getByCode(code);
@@ -240,6 +262,12 @@ export default function Home() {
                     <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       <span>Διαύγεια...</span>
+                    </div>
+                  )}
+                  {loadingMitos && (
+                    <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Μίτος & Μητρώα...</span>
                     </div>
                   )}
                 </div>

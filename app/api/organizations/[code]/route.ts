@@ -1,24 +1,71 @@
-// app/api/organizations/[code]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import path from "path";
 import { promises as fs } from "fs";
 import { getGsisData } from "@/lib/gsisHelper";
+import * as cheerio from "cheerio";
 
 const BASE_URL = "https://hrms.gov.gr/api";
 
-// --- HELPER FUNCTIONS ---
+interface MitosProcess {
+  id: string;
+  title: string;
+  link: string | null;
+}
 
-// Updated Normalize function (Same as in search route)
 const normalizeText = (text: string | undefined) => {
   if (!text) return "";
   return text
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove accents
-    .replace(/\*/g, "") // Remove asterisks (*)
-    .replace(/\s+/g, "") // Remove ALL spaces
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\*/g, "")
+    .replace(/\s+/g, "")
     .toUpperCase();
 };
+
+// Helper function για το scraping του Μίτος
+async function getMitosProcedures(orgId: string): Promise<MitosProcess[]> {
+  const url = `https://mitos.gov.gr/index.php/%CE%95%CE%B9%CE%B4%CE%B9%CE%BA%CF%8C:EMDViewOrg?org=${orgId}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    const processes: MitosProcess[] = [];
+
+    $("#tab-owner table tbody tr").each((_, element) => {
+      const cells = $(element).find("td");
+      if (cells.length >= 2) {
+        const id = $(cells[0]).text().trim();
+        const linkElem = $(cells[1]).find("a");
+        const title = linkElem.text().trim();
+        const href = linkElem.attr("href");
+
+        if (id && title) {
+          processes.push({
+            id,
+            title,
+            link: href ? `${href}` : null,
+          });
+        }
+      }
+    });
+
+    return processes;
+  } catch (err) {
+    console.error("Mitos scraping error:", err);
+    return [];
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -50,73 +97,68 @@ export async function GET(
 
     let elstatInfo = null;
 
+    // --- ELSTAT LOGIC ---
     try {
-      // Ensure consistency with the search route path (data/elstat.xlsx)
       const filePath = path.join(process.cwd(), "elstat.xlsx");
+      
+      await fs.access(filePath);
+      const fileBuffer = await fs.readFile(filePath);
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
 
-      try {
-        await fs.access(filePath);
-        const fileBuffer = await fs.readFile(filePath);
-        const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+      const sectors = [
+        { sheet: "S1311", label: "Κεντρική Κυβέρνηση", code: "S1311" },
+        {
+          sheet: "S1311 ΔΗΜΟΣΙΑ ΝΟΣΟΚΟΜΕΙΑ",
+          label: "Δημόσια Νοσοκομεία",
+          code: "S1311-HOSP",
+        },
+        {
+          sheet: "S1313",
+          label: "Οργανισμοί Τοπικής Αυτοδιοίκησης (ΟΤΑ)",
+          code: "S1313",
+        },
+        {
+          sheet: "S1314",
+          label: "Οργανισμοί Κοινωνικής Ασφάλισης (ΟΚΑ)",
+          code: "S1314",
+        },
+      ];
 
-        // Updated Sectors with correct Greek labels
-        const sectors = [
-          {
-            sheet: "S1311",
-            label: "Κεντρική Κυβέρνηση",
-            code: "S1311",
-          },
-          {
-            sheet: "S1311 ΔΗΜΟΣΙΑ ΝΟΣΟΚΟΜΕΙΑ",
-            label: "Δημόσια Νοσοκομεία",
-            code: "S1311-HOSP",
-          },
-          {
-            sheet: "S1313",
-            label: "Οργανισμοί Τοπικής Αυτοδιοίκησης (ΟΤΑ)",
-            code: "S1313",
-          },
-          {
-            sheet: "S1314",
-            label: "Οργανισμοί Κοινωνικής Ασφάλισης (ΟΚΑ)",
-            code: "S1314",
-          },
-        ];
+      for (const sector of sectors) {
+        const worksheet = workbook.Sheets[sector.sheet];
+        if (worksheet) {
+          const rows = XLSX.utils.sheet_to_json(worksheet, {
+            range: 2,
+          }) as any[];
+          const found = rows.find(
+            (row: any) => normalizeText(row["ΕΠΩΝΥΜΙΑ ΦΟΡΕΑ"]) === searchName
+          );
 
-        // Loop through sectors to find the entity
-        for (const sector of sectors) {
-          const worksheet = workbook.Sheets[sector.sheet];
-          if (worksheet) {
-            const rows = XLSX.utils.sheet_to_json(worksheet, {
-              range: 2,
-            }) as any[];
-
-            const found = rows.find((row: any) => {
-              const excelName = normalizeText(row["ΕΠΩΝΥΜΙΑ ΦΟΡΕΑ"]);
-              return excelName === searchName;
-            });
-
-            if (found) {
-              elstatInfo = {
-                code: sector.code, // Use the explicit code (e.g. S1311-HOSP)
-                description: sector.label,
-                sheetName: sector.sheet,
-              };
-              break; // Stop once found
-            }
+          if (found) {
+            elstatInfo = {
+              code: sector.code,
+              description: sector.label,
+              sheetName: sector.sheet,
+            };
+            break;
           }
         }
-      } catch (fileError) {
-        console.warn("Excel file not found or could not be read:", fileError);
       }
     } catch (err) {
-      console.error("Error processing Excel logic:", err);
+      console.warn("Excel processing skipped:", err);
     }
 
-    const gsisInfo = await getGsisData(data.data.preferredLabel);
+    const [gsisInfo, mitosProcedures] = await Promise.all([
+      getGsisData(data.data.preferredLabel),
+      getMitosProcedures(code),
+    ]);
 
     data.data.elstat = elstatInfo;
     data.data.gsis = gsisInfo;
+    data.data.mitos = {
+      total: mitosProcedures.length,
+      procedures: mitosProcedures,
+    };
 
     return NextResponse.json(data);
   } catch (error) {
