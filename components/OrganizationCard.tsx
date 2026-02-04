@@ -381,11 +381,11 @@ export default function OrganizationCard({
       {/* Diavgeia Info */}
       {organization.diavgeia && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 flex-col md:flex-row">
             <div className="p-1.5 bg-white rounded-md border border-indigo-100 shadow-sm">
               <Eye className="h-5 w-5 text-indigo-600" />
             </div>
-            <div className="flex-1">
+            <div className="w-full">
               <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-3">
                 Στοιχεία Διαύγειας (Πρόγραμμα Διαύγεια)
               </p>
