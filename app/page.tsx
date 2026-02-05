@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, Suspense, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import OrganizationCard from "@/components/OrganizationCard";
 import TreeView from "@/components/TreeView";
@@ -23,16 +23,10 @@ import StatisticsCard from "@/components/StatisticsCard";
 import { BarChart3, Loader2, Star } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
 import { fetchDiavgeiaAction } from "@/lib/actions";
-
-interface ExtendedOrganization extends FMitrooForeasDto {
-  elstat?: any;
-  gsis?: any;
-  diavgeia?: any;
-  mitos?: null | {
-    total: number;
-    procedures: any[];
-  };
-}
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { ExtendedOrganization } from "@/types/frontend";
+import ShareButton from "@/components/ShareButton";
+import FullPageLoader from "@/components/FullPageLoader";
 
 export default function Home() {
   const [selectedOrganization, setSelectedOrganization] =
@@ -46,6 +40,7 @@ export default function Home() {
   const [loadingTree, setLoadingTree] = useState(false);
   const [loadingUnit, setLoadingUnit] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // New State for Diavgeia loading
   const [loadingDiavgeia, setLoadingDiavgeia] = useState(false);
@@ -56,6 +51,33 @@ export default function Home() {
   const [showStatistics, setShowStatistics] = useState(false);
   const [allUnits, setAllUnits] = useState<OrgmaMonadaDto[]>([]);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // ΑΛΛΑΓΗ ΣΤΟ useEffect ΓΙΑ ΤΟ URL
+  useEffect(() => {
+    const orgCodeFromUrl = searchParams.get("org");
+
+    if (orgCodeFromUrl) {
+      if (
+        !selectedOrganization ||
+        selectedOrganization.code !== orgCodeFromUrl
+      ) {
+        setIsInitialLoading(true);
+        handleSelectByCode(orgCodeFromUrl).finally(() => {
+          setIsInitialLoading(false);
+        });
+      } else {
+        setIsInitialLoading(false);
+      }
+    } else {
+      setIsInitialLoading(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const { addToRecent } = useFavoritesContext();
 
   // Ref to scroll to positions panel
@@ -63,6 +85,10 @@ export default function Home() {
 
   const [loadingMitos, setLoadingMitos] = useState(false);
   const handleOrganizationSelect = async (org: FMitrooForeasDto) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("org", org.code);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
     const initialOrgState: ExtendedOrganization = {
       ...org,
       diavgeia: null,
@@ -98,7 +124,6 @@ export default function Home() {
       setLoadingDiavgeia(false);
     }
 
-    // --- MITOS FETCH (Το νέο κομμάτι) ---
     setLoadingMitos(true);
     try {
       const response = await fetch(`/api/organizations/${org.code}`);
@@ -143,7 +168,7 @@ export default function Home() {
   const handleSelectByCode = async (code: string) => {
     try {
       const response = await organizationAPI.getByCode(code);
-      handleOrganizationSelect(response.data.data);
+      await handleOrganizationSelect(response.data.data);
     } catch (error) {
       console.error("Error loading organization:", error);
       setError("Σφάλμα κατά τη φόρτωση του φορέα");
@@ -218,6 +243,10 @@ export default function Home() {
     }
     return result;
   };
+
+  if (isInitialLoading) {
+    return <FullPageLoader />;
+  }
 
   return (
     <main>
@@ -444,6 +473,7 @@ function TopControls({
 
         {selectedOrganization && (
           <>
+            <ShareButton organization={selectedOrganization} />
             {/* Statistics Button */}
             <button
               onClick={() => setShowStatistics(!showStatistics)}
