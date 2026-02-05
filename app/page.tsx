@@ -53,19 +53,12 @@ export default function Home() {
 
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  // ΑΛΛΑΓΗ ΣΤΟ useEffect ΓΙΑ ΤΟ URL
-  useEffect(() => {
-    const orgCodeFromUrl = searchParams.get("org");
-
-    if (orgCodeFromUrl) {
-      if (
-        !selectedOrganization ||
-        selectedOrganization.code !== orgCodeFromUrl
-      ) {
+  const handleUrlCheck = (code: string | null) => {
+    if (code) {
+      if (!selectedOrganization || selectedOrganization.code !== code) {
         setIsInitialLoading(true);
-        handleSelectByCode(orgCodeFromUrl).finally(() => {
+        handleSelectByCode(code).finally(() => {
           setIsInitialLoading(false);
         });
       } else {
@@ -74,9 +67,7 @@ export default function Home() {
     } else {
       setIsInitialLoading(false);
     }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  };
 
   const { addToRecent } = useFavoritesContext();
 
@@ -85,10 +76,6 @@ export default function Home() {
 
   const [loadingMitos, setLoadingMitos] = useState(false);
   const handleOrganizationSelect = async (org: FMitrooForeasDto) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("org", org.code);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-
     const initialOrgState: ExtendedOrganization = {
       ...org,
       diavgeia: null,
@@ -244,167 +231,172 @@ export default function Home() {
     return result;
   };
 
-  if (isInitialLoading) {
-    return <FullPageLoader />;
-  }
-
   return (
-    <Suspense fallback={<FullPageLoader />}>
-      <main>
-        <div className="container mx-auto px-4 flex-1 flex flex-col max-w-7xl">
-          {/* Top Controls: Search and Action Buttons */}
-          <TopControls
-            setShowFavorites={setShowFavorites}
-            setShowStatistics={setShowStatistics}
-            setShowComparison={setShowComparison}
-            showStatistics={showStatistics}
-            selectedOrganization={selectedOrganization}
-            onSelectOrganization={handleOrganizationSelect}
-          />
+    <>
+      <Suspense fallback={<FullPageLoader />}>
+        <UrlHandler onCheckUrl={handleUrlCheck} />
+      </Suspense>
+      {isInitialLoading ? (
+        <FullPageLoader />
+      ) : (
+        <main>
+          <div className="container mx-auto px-4 flex-1 flex flex-col max-w-7xl">
+            {/* Top Controls: Search and Action Buttons */}
+            <TopControls
+              setShowFavorites={setShowFavorites}
+              setShowStatistics={setShowStatistics}
+              setShowComparison={setShowComparison}
+              showStatistics={showStatistics}
+              selectedOrganization={selectedOrganization}
+              onSelectOrganization={handleOrganizationSelect}
+            />
 
-          {/* Empty State */}
-          {!selectedOrganization && <WelcomeMessage />}
+            {/* Empty State */}
+            {!selectedOrganization && <WelcomeMessage />}
 
-          {/* Main Content Container */}
-          <div className="flex-grow py-10 space-y-8">
-            {/* Error Message */}
-            {error && <ErrorMessage message={error} />}
+            {/* Main Content Container */}
+            <div className="flex-grow py-10 space-y-8">
+              {/* Error Message */}
+              {error && <ErrorMessage message={error} />}
 
-            {/* Statistics Dashboard */}
-            {selectedOrganization && showStatistics && allUnits.length > 0 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-900">
-                  Στατιστικά & Αναλύσεις
-                </h2>
-                <StatisticsCard units={allUnits} />
-              </div>
-            )}
-
-            {/* Organization Details */}
-            {selectedOrganization && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+              {/* Statistics Dashboard */}
+              {selectedOrganization &&
+                showStatistics &&
+                allUnits.length > 0 && (
+                  <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-900">
-                      Στοιχεία Φορέα
+                      Στατιστικά & Αναλύσεις
                     </h2>
-                    {loadingDiavgeia && (
-                      <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Διαύγεια...</span>
-                      </div>
-                    )}
-                    {loadingMitos && (
-                      <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full animate-pulse">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Μίτος & Μητρώα...</span>
-                      </div>
-                    )}
+                    <StatisticsCard units={allUnits} />
                   </div>
-                  <FavoriteButton
-                    organization={selectedOrganization}
-                    showLabel
-                  />
-                </div>
-                <OrganizationCard
-                  organization={selectedOrganization}
-                  onShowPositions={handleViewOrgPositions}
-                />
-              </div>
-            )}
+                )}
 
-            {/* Tree/Flow View */}
-            {selectedOrganization && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 gap-4">
-                  <h2 className="text-2xl font-bold text-[#1b3d89]">
-                    Οργανωτική Δομή
-                  </h2>
-                  <ViewToggle view={view} onViewChange={setView} />
-                </div>
-
-                {loadingTree ? (
-                  <TreeSkeleton />
-                ) : organizationTree ? (
-                  <div className="grid lg:grid-cols-1 gap-8">
-                    <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
-                      <div className="min-w-max">
-                        {view === "tree" ? (
-                          <TreeView
-                            tree={organizationTree}
-                            onSelectUnit={handleSelectUnit}
-                            selectedUnitCode={selectedUnit?.code}
-                          />
-                        ) : (
-                          <FlowDiagram
-                            tree={organizationTree}
-                            onSelectUnit={handleSelectUnit}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Unit Details Panel */}
-                    <div className="space-y-6 w-full min-w-0">
-                      {loadingUnit ? (
-                        <CardSkeleton />
-                      ) : selectedUnit ? (
-                        <div className="w-full overflow-x-auto">
-                          <UnitDetails
-                            unit={selectedUnit}
-                            path={getPathArray(unitPath)}
-                            onShowPositions={handleViewUnitPositions}
-                          />
+              {/* Organization Details */}
+              {selectedOrganization && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Στοιχεία Φορέα
+                      </h2>
+                      {loadingDiavgeia && (
+                        <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Διαύγεια...</span>
                         </div>
-                      ) : (
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
-                          <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
-                            Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
-                            αναλυτικές πληροφορίες
-                          </p>
+                      )}
+                      {loadingMitos && (
+                        <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full animate-pulse">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>Μίτος & Μητρώα...</span>
                         </div>
                       )}
                     </div>
+                    <FavoriteButton
+                      organization={selectedOrganization}
+                      showLabel
+                    />
                   </div>
-                ) : null}
-              </div>
-            )}
+                  <OrganizationCard
+                    organization={selectedOrganization}
+                    onShowPositions={handleViewOrgPositions}
+                  />
+                </div>
+              )}
 
-            {/* Positions Panel */}
-            {selectedOrganization && (
-              <div className="space-y-4" ref={positionsPanelRef}>
-                <h2 className="text-2xl font-bold text-[#1b3d89]">
-                  Θέσεις Εργασίας
-                </h2>
-                <PositionsPanel
-                  key={`${selectedOrganization.code}-${
-                    selectedUnit?.code || "all"
-                  }`}
-                  organizationCode={selectedOrganization.code}
-                  unitCode={selectedUnit?.code}
-                  unitName={selectedUnit?.preferredLabel}
-                />
-              </div>
-            )}
+              {/* Tree/Flow View */}
+              {selectedOrganization && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-4 gap-4">
+                    <h2 className="text-2xl font-bold text-[#1b3d89]">
+                      Οργανωτική Δομή
+                    </h2>
+                    <ViewToggle view={view} onViewChange={setView} />
+                  </div>
+
+                  {loadingTree ? (
+                    <TreeSkeleton />
+                  ) : organizationTree ? (
+                    <div className="grid lg:grid-cols-1 gap-8">
+                      <div className="bg-white p-4 sm:p-6 rounded-sm border border-gray-200 shadow-sm w-full overflow-x-auto">
+                        <div className="min-w-max">
+                          {view === "tree" ? (
+                            <TreeView
+                              tree={organizationTree}
+                              onSelectUnit={handleSelectUnit}
+                              selectedUnitCode={selectedUnit?.code}
+                            />
+                          ) : (
+                            <FlowDiagram
+                              tree={organizationTree}
+                              onSelectUnit={handleSelectUnit}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Unit Details Panel */}
+                      <div className="space-y-6 w-full min-w-0">
+                        {loadingUnit ? (
+                          <CardSkeleton />
+                        ) : selectedUnit ? (
+                          <div className="w-full overflow-x-auto">
+                            <UnitDetails
+                              unit={selectedUnit}
+                              path={getPathArray(unitPath)}
+                              onShowPositions={handleViewUnitPositions}
+                            />
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-sm p-6 sm:p-12 text-center h-full flex flex-col justify-center items-center">
+                            <p className="text-gray-500 text-lg font-medium break-words max-w-md mx-auto">
+                              Επιλέξτε μια μονάδα από το διάγραμμα για να δείτε
+                              αναλυτικές πληροφορίες
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Positions Panel */}
+              {selectedOrganization && (
+                <div className="space-y-4" ref={positionsPanelRef}>
+                  <h2 className="text-2xl font-bold text-[#1b3d89]">
+                    Θέσεις Εργασίας
+                  </h2>
+                  <PositionsPanel
+                    key={`${selectedOrganization.code}-${
+                      selectedUnit?.code || "all"
+                    }`}
+                    organizationCode={selectedOrganization.code}
+                    unitCode={selectedUnit?.code}
+                    unitName={selectedUnit?.preferredLabel}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Favorites Sidebar */}
-        <FavoritesSidebar
-          isOpen={showFavorites}
-          onClose={() => setShowFavorites(false)}
-          onSelectOrganization={handleSelectByCode}
-        />
-
-        {/* Comparison View Modal */}
-        {showComparison && (
-          <ComparisonView
-            initialOrganization={selectedOrganization || undefined}
-            onClose={() => setShowComparison(false)}
+          {/* Favorites Sidebar */}
+          <FavoritesSidebar
+            isOpen={showFavorites}
+            onClose={() => setShowFavorites(false)}
+            onSelectOrganization={handleSelectByCode}
           />
-        )}
-      </main>
-    </Suspense>
+
+          {/* Comparison View Modal */}
+          {showComparison && (
+            <ComparisonView
+              initialOrganization={selectedOrganization || undefined}
+              onClose={() => setShowComparison(false)}
+            />
+          )}
+        </main>
+      )}
+    </>
   );
 }
 
@@ -503,4 +495,19 @@ function TopControls({
       </div>
     </div>
   );
+}
+
+function UrlHandler({
+  onCheckUrl,
+}: {
+  onCheckUrl: (code: string | null) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const code = searchParams.get("org");
+    onCheckUrl(code);
+  }, [searchParams, onCheckUrl]);
+
+  return null;
 }

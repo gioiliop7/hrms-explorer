@@ -1,9 +1,7 @@
 // components/Header.tsx
 "use client";
 
-import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 
 /**
  * Header component
@@ -21,12 +19,9 @@ export default function Header() {
           <div className="border-l border-gray-600 h-6" />
 
           {/* Title */}
-          <Link
-            href="/"
-            className="text-white text-xl md:text-2xl font-semibold"
-          >
-           The Greek Extended Registry
-          </Link>
+          <a href="/" className="text-white text-xl md:text-2xl font-semibold">
+            The Greek Extended Registry
+          </a>
         </div>
       </div>
     </header>
