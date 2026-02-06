@@ -23,13 +23,15 @@ import StatisticsCard from "@/components/StatisticsCard";
 import { BarChart3, Loader2, Star } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
 import { fetchDiavgeiaAction } from "@/lib/actions";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { ExtendedOrganization } from "@/types/frontend";
 import ShareButton from "@/components/ShareButton";
 import FullPageLoader from "@/components/FullPageLoader";
 
-
 export default function HomeClient() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [selectedOrganization, setSelectedOrganization] =
     useState<ExtendedOrganization | null>(null);
   const [organizationTree, setOrganizationTree] =
@@ -73,7 +75,12 @@ export default function HomeClient() {
   const positionsPanelRef = useRef<HTMLDivElement>(null);
 
   const [loadingMitos, setLoadingMitos] = useState(false);
+
   const handleOrganizationSelect = async (org: FMitrooForeasDto) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("org", org.code);
+    window.history.pushState({}, "", url);
+
     const initialOrgState: ExtendedOrganization = {
       ...org,
       diavgeia: null,
@@ -153,7 +160,46 @@ export default function HomeClient() {
   const handleSelectByCode = async (code: string) => {
     try {
       const response = await organizationAPI.getByCode(code);
-      await handleOrganizationSelect(response.data.data);
+      const org = response.data.data;
+
+      const initialOrgState: ExtendedOrganization = {
+        ...org,
+        diavgeia: null,
+        mitos: null,
+      };
+      setSelectedOrganization(initialOrgState);
+      setSelectedUnit(null);
+      setUnitPath(null);
+      addToRecent(org);
+      loadOrganizationTree(org.code);
+
+      // Diavgeia Fetch (Simplified call)
+      setLoadingDiavgeia(true);
+      fetchDiavgeiaAction(org.preferredLabel).then((data) => {
+        if (data)
+          setSelectedOrganization((prev) =>
+            prev && prev.code === org.code ? { ...prev, diavgeia: data } : prev
+          );
+        setLoadingDiavgeia(false);
+      });
+
+      // Mitos Fetch (Simplified call)
+      setLoadingMitos(true);
+      fetch(`/api/organizations/${org.code}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setSelectedOrganization((prev) =>
+            prev && prev.code === org.code
+              ? {
+                  ...prev,
+                  elstat: data.data.elstat,
+                  gsis: data.data.gsis,
+                  mitos: data.data.mitos,
+                }
+              : prev
+          );
+          setLoadingMitos(false);
+        });
     } catch (error) {
       console.error("Error loading organization:", error);
       setError("Σφάλμα κατά τη φόρτωση του φορέα");
