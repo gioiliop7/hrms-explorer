@@ -23,14 +23,12 @@ import StatisticsCard from "@/components/StatisticsCard";
 import { BarChart3, Loader2, Star } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
 import { fetchDiavgeiaAction } from "@/lib/actions";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ExtendedOrganization } from "@/types/frontend";
 import ShareButton from "@/components/ShareButton";
 import FullPageLoader from "@/components/FullPageLoader";
 
 export default function HomeClient() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [selectedOrganization, setSelectedOrganization] =
     useState<ExtendedOrganization | null>(null);
