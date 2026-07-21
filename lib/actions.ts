@@ -4,6 +4,7 @@
 import path from "path";
 import { promises as fs } from "fs";
 import { getDiavgeiaData } from "./diavgeia";
+import { getOpenGovConsultations } from "./opengov";
 
 const FILES = ["1.json", "2.json"];
 
@@ -45,6 +46,16 @@ export async function fetchDiavgeiaAction(name: string) {
     return data;
   } catch (error) {
     console.error("Failed to fetch Diavgeia data via Server Action", error);
+    return null;
+  }
+}
+
+export async function fetchOpenGovAction(name: string) {
+  try {
+    const data = await getOpenGovConsultations(name);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch OpenGov data via Server Action", error);
     return null;
   }
 }

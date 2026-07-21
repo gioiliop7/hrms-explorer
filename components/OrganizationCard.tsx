@@ -21,6 +21,7 @@ import {
   Gavel, // Added for Decisions
   ClipboardList,
   ChevronRight,
+  Megaphone, // Added for OpenGov Consultations
 } from "lucide-react";
 import type { FMitrooForeasDto } from "@/types/api";
 import { ENTITY_TYPE_MAP, formatDate } from "@/lib/utils";
@@ -65,6 +66,26 @@ interface DiavgeiaDecision {
   status: string;
 }
 
+interface OpenGovConsultation {
+  id: number;
+  title: string;
+  link: string;
+  publishDate: string;
+  expiryDate: string | null;
+  status: "open" | "closed" | "pending" | "unknown";
+  statusLabel: string;
+}
+
+const OPENGOV_STATUS_STYLES: Record<
+  OpenGovConsultation["status"],
+  { badge: string; dot: string }
+> = {
+  open: { badge: "bg-green-100 text-green-700", dot: "bg-green-500" },
+  pending: { badge: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+  closed: { badge: "bg-gray-100 text-gray-500", dot: "bg-gray-400" },
+  unknown: { badge: "bg-gray-100 text-gray-500", dot: "bg-gray-400" },
+};
+
 interface DiavgeiaData {
   fekYear: string;
   fekNumber: any;
@@ -106,6 +127,7 @@ interface ExtendedOrganization extends FMitrooForeasDto {
     total: number;
     procedures: MitosProcess[];
   } | null;
+  opengov?: OpenGovConsultation[] | null;
 }
 
 interface OrganizationCardProps {
@@ -687,6 +709,66 @@ export default function OrganizationCard({
           </div>
         </div>
       )}
+      {/* OpenGov Consultations */}
+      {organization.opengov && organization.opengov.length > 0 && (
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-white rounded-md border border-teal-100 shadow-sm">
+              <Megaphone className="h-5 w-5 text-teal-600" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-teal-700 uppercase tracking-wide">
+                Διαβουλεύσεις (OpenGov.gr)
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {organization.opengov.map((item) => (
+              <a
+                key={item.id}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-start justify-between gap-2 bg-white border border-teal-100 rounded-md p-2.5 shadow-sm hover:shadow-md hover:border-teal-300 transition-all"
+              >
+                <div className="flex-1 min-w-0">
+                  {item.statusLabel && (
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full mb-1 ${
+                        OPENGOV_STATUS_STYLES[item.status].badge
+                      }`}
+                    >
+                      <span
+                        className={`inline-block w-1.5 h-1.5 rounded-full ${
+                          OPENGOV_STATUS_STYLES[item.status].dot
+                        }`}
+                      />
+                      {item.statusLabel}
+                    </span>
+                  )}
+                  <p
+                    className="text-sm text-gray-800 group-hover:text-teal-700 line-clamp-2"
+                    title={item.title}
+                  >
+                    {item.title}
+                  </p>
+                  {(item.publishDate || item.expiryDate) && (
+                    <div className="flex items-center gap-1 text-[11px] text-gray-400 mt-1">
+                      <CalendarDays className="h-3 w-3" />
+                      <span>
+                        {formatDate(item.publishDate)}
+                        {item.expiryDate && ` – ${formatDate(item.expiryDate)}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-teal-500 flex-shrink-0 mt-0.5" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {organization.mitos && organization.mitos.total > 0 && (
         <>
           <div className="space-y-4">

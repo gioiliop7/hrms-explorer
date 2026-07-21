@@ -8,4 +8,13 @@ export interface ExtendedOrganization extends FMitrooForeasDto {
     total: number;
     procedures: any[];
   };
+  opengov?: null | {
+    id: number;
+    title: string;
+    link: string;
+    publishDate: string;
+    expiryDate: string | null;
+    status: "open" | "closed" | "pending" | "unknown";
+    statusLabel: string;
+  }[];
 }

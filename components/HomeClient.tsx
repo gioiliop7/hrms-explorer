@@ -22,7 +22,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import StatisticsCard from "@/components/StatisticsCard";
 import { BarChart3, Loader2, Star } from "lucide-react";
 import { useFavoritesContext } from "@/lib/FavoritesContext";
-import { fetchDiavgeiaAction } from "@/lib/actions";
+import { fetchDiavgeiaAction, fetchOpenGovAction } from "@/lib/actions";
 import { useSearchParams } from "next/navigation";
 import { ExtendedOrganization } from "@/types/frontend";
 import ShareButton from "@/components/ShareButton";
@@ -45,6 +45,7 @@ export default function HomeClient() {
 
   // New State for Diavgeia loading
   const [loadingDiavgeia, setLoadingDiavgeia] = useState(false);
+  const [loadingOpenGov, setLoadingOpenGov] = useState(false);
 
   // New state for features
   const [showFavorites, setShowFavorites] = useState(false);
@@ -83,6 +84,7 @@ export default function HomeClient() {
       ...org,
       diavgeia: null,
       mitos: null,
+      opengov: null,
     };
 
     setSelectedOrganization(initialOrgState);
@@ -112,6 +114,24 @@ export default function HomeClient() {
       console.error("Error fetching Diavgeia data:", err);
     } finally {
       setLoadingDiavgeia(false);
+    }
+
+    setLoadingOpenGov(true);
+    try {
+      const opengovData = await fetchOpenGovAction(org.preferredLabel);
+
+      setSelectedOrganization((prev) => {
+        if (!prev || prev.code !== org.code) return prev;
+
+        return {
+          ...prev,
+          opengov: opengovData,
+        };
+      });
+    } catch (err) {
+      console.error("Error fetching OpenGov data:", err);
+    } finally {
+      setLoadingOpenGov(false);
     }
 
     setLoadingMitos(true);
@@ -164,6 +184,7 @@ export default function HomeClient() {
         ...org,
         diavgeia: null,
         mitos: null,
+        opengov: null,
       };
       setSelectedOrganization(initialOrgState);
       setSelectedUnit(null);
@@ -179,6 +200,15 @@ export default function HomeClient() {
             prev && prev.code === org.code ? { ...prev, diavgeia: data } : prev
           );
         setLoadingDiavgeia(false);
+      });
+
+      // OpenGov Consultations Fetch (Simplified call)
+      setLoadingOpenGov(true);
+      fetchOpenGovAction(org.preferredLabel).then((data) => {
+        setSelectedOrganization((prev) =>
+          prev && prev.code === org.code ? { ...prev, opengov: data } : prev
+        );
+        setLoadingOpenGov(false);
       });
 
       // Mitos Fetch (Simplified call)
@@ -291,6 +321,7 @@ export default function HomeClient() {
               showStatistics={showStatistics}
               selectedOrganization={selectedOrganization}
               onSelectOrganization={handleOrganizationSelect}
+              onSelectByCode={handleSelectByCode}
             />
 
             {/* Empty State */}
@@ -331,6 +362,12 @@ export default function HomeClient() {
                         <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full animate-pulse">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           <span>Μίτος & Μητρώα...</span>
+                        </div>
+                      )}
+                      {loadingOpenGov && (
+                        <div className="flex items-center gap-1 text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-full animate-pulse">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span>OpenGov...</span>
                         </div>
                       )}
                     </div>
@@ -482,6 +519,7 @@ function TopControls({
   showStatistics,
   selectedOrganization,
   onSelectOrganization,
+  onSelectByCode,
 }: {
   setShowFavorites: (v: boolean) => void;
   setShowStatistics: (v: boolean) => void;
@@ -489,13 +527,14 @@ function TopControls({
   showStatistics: boolean;
   selectedOrganization: FMitrooForeasDto | null;
   onSelectOrganization: (org: FMitrooForeasDto) => void;
+  onSelectByCode: (code: string) => void;
 }) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 gap-4 w-full">
       {/* Search Section */}
       <div className="w-full">
         <Suspense fallback={<div>Loading...</div>}>
-          <SearchBar onSelectOrganization={onSelectOrganization} />
+          <SearchBar onSelectOrganization={onSelectOrganization} onSelectByCode={onSelectByCode} />
         </Suspense>
       </div>
 
