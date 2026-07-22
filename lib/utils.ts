@@ -985,3 +985,23 @@ export const getEmployeeCategoryDescription = (
 
   return employeeCategoriesMap.get(id) || `Άγνωστη Κατηγορία (${code})`;
 };
+
+// Position status (Κατάσταση θέσης)
+export const POSITION_STATUS_ORDER = [
+  "Occupied",
+  "Empty",
+  "Reserved",
+  "ToBeAbolished",
+] as const;
+
+const POSITION_STATUS_LABELS: Record<string, string> = {
+  Occupied: "Καλυμμένη",
+  Empty: "Κενή",
+  Reserved: "Δεσμευμένη",
+  ToBeAbolished: "Προς Κατάργηση",
+};
+
+export function getPositionStatusLabel(status?: string | null): string {
+  if (!status) return "-";
+  return POSITION_STATUS_LABELS[status] || status;
+}

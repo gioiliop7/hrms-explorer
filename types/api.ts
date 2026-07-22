@@ -94,6 +94,8 @@ export interface ResponseWrapper<T> {
   }
   
   // Position Types
+  export type OrgmaThesiStatus = 'Occupied' | 'Empty' | 'Reserved' | 'ToBeAbolished';
+
   export interface OrgmaThesiDto {
     code: string;
     organizationCode: string;
@@ -110,6 +112,7 @@ export interface ResponseWrapper<T> {
     jobDescriptionTitle?: string;
     jobDescriptionVersion?: number;
     jobDescriptionVersionDate?: string;
+    status?: OrgmaThesiStatus;
   }
   
   // Dictionary Types

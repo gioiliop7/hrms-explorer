@@ -8,6 +8,7 @@ import { positionsAPI } from "@/lib/api";
 import {
   getEmployeeCategoryDescription,
   getEmploymentTypeDescription,
+  getPositionStatusLabel,
   getRankDescription,
 } from "@/lib/utils";
 
@@ -96,16 +97,27 @@ export default function PositionCard({ position }: PositionCardProps) {
             </div>
           </div>
 
-          {/* Type Badge */}
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-              position.type === "Organic"
-                ? "bg-green-100 text-green-800"
-                : "bg-orange-100 text-orange-800"
-            }`}
-          >
-            {position.type === "Organic" ? "Οργανική" : "Προσωποπαγής"}
-          </span>
+          {/* Type & Status Badges */}
+          <div className="flex flex-col items-end gap-1.5">
+            {position.status && (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusBadgeClasses(
+                  position.status
+                )}`}
+              >
+                {getPositionStatusLabel(position.status)}
+              </span>
+            )}
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                position.type === "Organic"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-orange-100 text-orange-800"
+              }`}
+            >
+              {position.type === "Organic" ? "Οργανική" : "Προσωποπαγής"}
+            </span>
+          </div>
         </div>
 
         {/* Details Grid */}
@@ -252,6 +264,17 @@ function DetailRow({
       <span className="text-gray-900 font-medium">{value}</span>
     </div>
   );
+}
+
+// Helper function for status badge colors
+function getStatusBadgeClasses(status: string): string {
+  const classes: Record<string, string> = {
+    Occupied: "bg-slate-100 text-slate-700",
+    Empty: "bg-amber-100 text-amber-800",
+    Reserved: "bg-indigo-100 text-indigo-700",
+    ToBeAbolished: "bg-red-100 text-red-700",
+  };
+  return classes[status] || "bg-gray-100 text-gray-700";
 }
 
 // Helper function for education labels

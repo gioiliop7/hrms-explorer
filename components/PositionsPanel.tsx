@@ -13,8 +13,9 @@ import {
   ChevronRight,
   FilterX,
 } from "lucide-react";
-import type { OrgmaThesiDto } from "@/types/api";
+import type { OrgmaThesiDto, OrgmaThesiStatus } from "@/types/api";
 import { positionsAPI } from "@/lib/api";
+import { getPositionStatusLabel, POSITION_STATUS_ORDER } from "@/lib/utils";
 import PositionCard from "./PositionCard";
 
 interface PositionsPanelProps {
@@ -38,6 +39,7 @@ export default function PositionsPanel({
 
   // States για Pagination και Αναζήτηση
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrgmaThesiStatus | "">("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleFetchPositions = async () => {
@@ -63,18 +65,26 @@ export default function PositionsPanel({
   };
 
   const filteredPositions = useMemo(() => {
-    if (!searchTerm) return positions;
-    const lowerTerm = searchTerm.toLowerCase();
+    let result = positions;
 
-    return positions.filter((p) => {
-      // Safely handle nulls and convert non-strings (like numbers) to string
-      const code = (p.code || "").toString().toLowerCase();
-      const type = (p.employmentType || "").toString().toLowerCase();
-      const title = (p.jobDescriptionTitle || "").toString().toLowerCase();
+    if (statusFilter) {
+      result = result.filter((p) => p.status === statusFilter);
+    }
 
-      return code.includes(lowerTerm) || type.includes(lowerTerm) || title.includes(lowerTerm);
-    });
-  }, [positions, searchTerm]);
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter((p) => {
+        // Safely handle nulls and convert non-strings (like numbers) to string
+        const code = (p.code || "").toString().toLowerCase();
+        const type = (p.employmentType || "").toString().toLowerCase();
+        const title = (p.jobDescriptionTitle || "").toString().toLowerCase();
+
+        return code.includes(lowerTerm) || type.includes(lowerTerm) || title.includes(lowerTerm);
+      });
+    }
+
+    return result;
+  }, [positions, searchTerm, statusFilter]);
 
   // 2. Υπολογισμός Pagination
   const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
@@ -87,6 +97,15 @@ export default function PositionsPanel({
   // Statistics
   const organicCount = positions.filter((p) => p.type === "Organic").length;
   const temporaryCount = positions.filter((p) => p.type === "Temporary").length;
+
+  const statusCounts = positions.reduce((acc, pos) => {
+    if (pos.status) acc[pos.status] = (acc[pos.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const availableStatuses = POSITION_STATUS_ORDER.filter(
+    (status) => statusCounts[status] > 0
+  );
 
   const positionsByEducation = positions.reduce((acc, pos) => {
     const edu = pos.educationCategory || 0;
@@ -156,6 +175,19 @@ export default function PositionsPanel({
                 color="purple"
               />
             </div>
+
+            {availableStatuses.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                {availableStatuses.map((status) => (
+                  <StatCard
+                    key={status}
+                    label={getPositionStatusLabel(status)}
+                    value={statusCounts[status] || 0}
+                    color={STATUS_STAT_COLOR[status]}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -205,6 +237,25 @@ export default function PositionsPanel({
               )}
             </div>
 
+            {/* Status Filter */}
+            {availableStatuses.length > 0 && (
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as OrgmaThesiStatus | "");
+                  setCurrentPage(1); // Reset page on filter change
+                }}
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+              >
+                <option value="">Όλες οι καταστάσεις</option>
+                {availableStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {getPositionStatusLabel(status)} ({statusCounts[status]})
+                  </option>
+                ))}
+              </select>
+            )}
+
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500 font-medium hidden sm:inline-block">
                 {filteredPositions.length} αποτελέσματα
@@ -239,7 +290,11 @@ export default function PositionsPanel({
               ) : (
                 <div className="p-8 text-center text-gray-500">
                   <FilterX className="h-10 w-10 mx-auto mb-2 text-gray-300" />
-                  <p>Δεν βρέθηκαν αποτελέσματα για "{searchTerm}"</p>
+                  <p>
+                    {searchTerm
+                      ? `Δεν βρέθηκαν αποτελέσματα για "${searchTerm}"`
+                      : "Δεν βρέθηκαν θέσεις με αυτά τα κριτήρια"}
+                  </p>
                 </div>
               )}
 
@@ -338,6 +393,24 @@ export default function PositionsPanel({
   );
 }
 
+type StatCardColor =
+  | "blue"
+  | "green"
+  | "orange"
+  | "purple"
+  | "slate"
+  | "amber"
+  | "indigo"
+  | "red";
+
+// Maps each position status to the color its stat card / would use
+const STATUS_STAT_COLOR: Record<string, StatCardColor> = {
+  Occupied: "slate",
+  Empty: "amber",
+  Reserved: "indigo",
+  ToBeAbolished: "red",
+};
+
 // Helper component for stat cards (Slightly smaller text)
 function StatCard({
   label,
@@ -346,13 +419,17 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  color: "blue" | "green" | "orange" | "purple";
+  color: StatCardColor;
 }) {
-  const colorClasses = {
+  const colorClasses: Record<StatCardColor, string> = {
     blue: "bg-blue-50 text-blue-700 ring-1 ring-blue-100",
     green: "bg-green-50 text-green-700 ring-1 ring-green-100",
     orange: "bg-orange-50 text-orange-700 ring-1 ring-orange-100",
     purple: "bg-purple-50 text-purple-700 ring-1 ring-purple-100",
+    slate: "bg-slate-50 text-slate-700 ring-1 ring-slate-100",
+    amber: "bg-amber-50 text-amber-700 ring-1 ring-amber-100",
+    indigo: "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100",
+    red: "bg-red-50 text-red-700 ring-1 ring-red-100",
   };
 
   return (
