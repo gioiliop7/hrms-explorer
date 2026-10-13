@@ -127,6 +127,47 @@ function findSiteId(organizationName: string): number | null {
   return partial ? partial.siteId : null;
 }
 
+export interface OpenGovConsultationCount {
+  /** Consultations currently published for this body. */
+  count: number;
+  /** False when the body has no site_id at all, which is not the same as zero. */
+  siteKnown: boolean;
+}
+
+/**
+ * How many consultations an organization currently has published.
+ *
+ * Two things make this a small number by nature, and both belong in any label put
+ * on it. The endpoint returns what is published *now*, not a historical archive —
+ * measured across all 48 known sites, the whole network held 12 consultations, with
+ * no single body above 2. And only those 48 bodies have a site_id at all: every
+ * municipality, hospital and court is absent from the network entirely.
+ *
+ * So `siteKnown: false` means "not on opengov.gr", which must not be rendered as a
+ * zero — that would read as "this body runs no consultations".
+ */
+export async function getOpenGovConsultationCount(
+  organizationName: string,
+): Promise<OpenGovConsultationCount> {
+  const siteId = findSiteId(organizationName);
+  if (!siteId) return { count: 0, siteKnown: false };
+
+  try {
+    // per_page=1 because only the X-WP-Total header is wanted, not the payload.
+    const response = await fetch(
+      `https://opengov.gr/wp-json/opengov/v1/subsite-posts?site_id=${siteId}&per_page=1`,
+      { headers: { Accept: "application/json" }, next: { revalidate: 3600 } },
+    );
+    if (!response.ok) return { count: 0, siteKnown: true };
+
+    const total = Number(response.headers.get("x-wp-total") ?? 0);
+    return { count: Number.isFinite(total) ? total : 0, siteKnown: true };
+  } catch (error) {
+    console.error(`OpenGov count failed for "${organizationName}":`, error);
+    return { count: 0, siteKnown: true };
+  }
+}
+
 /**
  * Fetches published consultations (διαβουλεύσεις) for an organization from opengov.gr.
  * Returns null when the organization has no known site_id in the network.
@@ -150,9 +191,11 @@ export async function getOpenGovConsultations(
 
     const url = `https://opengov.gr/wp-json/opengov/v1/subsite-posts?${params.toString()}`;
 
+    // One or the other, never both: `cache: "no-store"` and `revalidate` are
+    // contradictory and Next warns about it. Consultations change on the order of
+    // days, so the hour-long revalidate is the one worth keeping.
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
-      cache: "no-store",
       next: { revalidate: 3600 },
     });
 

@@ -2,10 +2,15 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { OrgmaMonadaTreeDto, FlowNode, FlowEdge } from "@/types/api";
+import { downloadCsv } from "@/lib/csv";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Re-exported so callers already reaching for lib/utils find them; they live in
+// lib/text.ts because that module has no dependencies and can run under plain Node.
+export { normalizeGreekText, normalizeGreekTokens } from "@/lib/text";
 
 // Convert tree structure to React Flow nodes and edges
 export function treeToFlow(
@@ -72,18 +77,6 @@ export function treeToFlow(
   return { nodes, edges };
 }
 
-// Download file helper
-export function downloadFile(blob: Blob, filename: string) {
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
-
 // Format date helper
 export function formatDate(dateString?: string): string {
   if (!dateString) return "Μ/Δ";
@@ -101,29 +94,6 @@ export function debounce<T extends (...args: any[]) => any>(
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
-}
-
-// Export to JSON
-export function exportToJSON(data: any, filename: string) {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  downloadFile(blob, filename);
-}
-
-// Export to CSV
-export function exportToCSV(data: any[], filename: string) {
-  if (data.length === 0) return;
-
-  const headers = Object.keys(data[0]);
-  const csvContent = [
-    headers.join(","),
-    ...data.map((row) =>
-      headers.map((header) => JSON.stringify(row[header] ?? "")).join(",")
-    ),
-  ].join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  downloadFile(blob, filename);
 }
 
 // Get unit type label
@@ -148,12 +118,19 @@ export function getUnitTypeLabel(unitType?: number): string {
   return unitTypes[unitType || 0] || "Άγνωστος Τύπος";
 }
 
+export interface FlatTreeRow {
+  code: string;
+  label: string;
+  level: number;
+  parentCode: string | null;
+}
+
 export function flattenTree(
   node: OrgmaMonadaTreeDto,
   level = 0,
   parentCode: string | null = null,
-  acc: any[] = []
-) {
+  acc: FlatTreeRow[] = []
+): FlatTreeRow[] {
   acc.push({
     code: node.code,
     label: node.preferredLabel,
@@ -171,43 +148,37 @@ export function flattenTree(
 }
 
 export function exportTreeToCSV(tree: OrgmaMonadaTreeDto) {
-  const rows = flattenTree(tree);
-
-  const header = ["Code", "Label", "Level", "ParentCode"];
-  const csvContent = [
-    header.join(","),
-    ...rows.map((row) =>
-      [
-        row.code,
-        `"${row.label.replace(/"/g, '""')}"`,
-        row.level,
-        row.parentCode ?? "",
-      ].join(",")
-    ),
-  ].join("\n");
-
-  const BOM = "\uFEFF";
-  const blob = new Blob([BOM + csvContent], {
-    type: "text/csv;charset=utf-8;",
-  });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "org-structure.csv";
-  link.click();
-
-  URL.revokeObjectURL(url);
+  downloadCsv("org-structure.csv", flattenTree(tree), [
+    { header: "\u039A\u03C9\u03B4\u03B9\u03BA\u03CC\u03C2", value: (row) => row.code },
+    { header: "\u039F\u03BD\u03BF\u03BC\u03B1\u03C3\u03AF\u03B1", value: (row) => row.label },
+    { header: "\u0395\u03C0\u03AF\u03C0\u03B5\u03B4\u03BF", value: (row) => row.level },
+    { header: "\u039A\u03C9\u03B4\u03B9\u03BA\u03CC\u03C2 \u03B3\u03BF\u03BD\u03AD\u03B1", value: (row) => row.parentCode ?? "" },
+  ]);
 }
 
+/**
+ * Education categories, as published by ΗΡΜΣ's own EducationTypes dictionary
+ * (/public/metadata/dictionary/EducationTypes).
+ *
+ * These codes start at 1 = "ΑΝΕΥ ΚΑΤΗΓΟΡΙΑΣ", so ΠΕ is 2, not 1. An earlier version
+ * of this map assumed ΠΕ/ΤΕ/ΔΕ/ΥΕ were 1–4 and therefore labelled every position
+ * one rung too high — a ΔΕ position was displayed as ΤΕ.
+ */
+const EDUCATION_LABELS: Record<number, string> = {
+  1: "Άνευ κατηγορίας",
+  2: "ΠΕ",
+  3: "ΤΕ",
+  4: "ΔΕ",
+  5: "ΥΕ",
+  6: "Ειδικών θέσεων",
+  7: "ΕΕΠ",
+};
+
+/** The four ranks that carry most positions, in the order they are read. */
+export const MAIN_EDUCATION_CATEGORIES = [2, 3, 4, 5];
+
 export function getEducationLabel(category: number): string {
-  const labels: Record<number, string> = {
-    1: "ΠΕ",
-    2: "ΤΕ",
-    3: "ΔΕ",
-    4: "ΥΕ",
-  };
-  return labels[category] || `Κατηγορία ${category}`;
+  return EDUCATION_LABELS[category] || `Κατηγορία ${category}`;
 }
 
 export const ENTITY_TYPE_MAP: Record<number, string> = {

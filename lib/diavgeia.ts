@@ -261,6 +261,119 @@ async function getOrganizationUnits(uid: string): Promise<DiavgeiaUnit[]> {
   }
 }
 
+/**
+ * Serializes every decision-count request across the whole server.
+ *
+ * Διαύγεια's search endpoint tolerates no concurrency at all here: measured with
+ * eight simultaneous count queries, seven came back 503 while the same eight run
+ * one after another all returned 200. Comparing three organizations over three
+ * financial years is twelve queries, so without this they mostly fail — and a
+ * failed count rendered beside real ones reads as a body that published nothing.
+ */
+let diavgeiaQueue: Promise<unknown> = Promise.resolve();
+
+function serialize<T>(task: () => Promise<T>): Promise<T> {
+  const result = diavgeiaQueue.then(task, task);
+  diavgeiaQueue = result.catch(() => {});
+  return result;
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** One count, queued behind any other, retried through the occasional 503. */
+async function countDecisions(
+  query: string,
+  uid: string,
+): Promise<number | null> {
+  return serialize(async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const url =
+          `https://diavgeia.gov.gr/luminapi/api/search?facet=false&page=0&size=1` +
+          `&q=${encodeURIComponent(query)}`;
+        const response = await fetch(url, {
+          headers: { Accept: "application/json" },
+          next: { revalidate: 60 * 60 * 6 },
+        });
+
+        if (response.status === 503 || response.status === 429) {
+          await sleep(500 * (attempt + 1));
+          continue;
+        }
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        return typeof data?.info?.total === "number" ? data.info.total : null;
+      } catch (error) {
+        console.error(`Διαύγεια count failed for ${uid}:`, error);
+        await sleep(500 * (attempt + 1));
+      }
+    }
+    return null;
+  });
+}
+
+export interface DiavgeiaDecisionCounts {
+  uid: string;
+  /**
+   * Every decision the body has ever published — Διαύγεια goes back to 2010.
+   * Null when the count could not be read, which is not the same as none.
+   */
+  totalAllTime: number | null;
+  /** Decisions per financial year, newest first; null where the count failed. */
+  byYear: { year: number; count: number | null }[];
+}
+
+/**
+ * How many decisions an organization has published, for comparing bodies.
+ *
+ * Counted per financial year rather than over an arbitrary period, because that is
+ * the only slicing Διαύγεια offers: Lucene date ranges on `issueDate` and
+ * `publishTimestamp` are both rejected with HTTP 400, and `dateFrom`/`dateTo` query
+ * parameters are silently ignored (they return the unfiltered total, which would
+ * look like a working filter). `textFinancialYear` is the one that works.
+ *
+ * Callers must therefore not present these numbers as covering the same window as
+ * ΚΗΜΔΗΣ figures shown beside them — the year is part of the label, not a detail.
+ *
+ * The organization UID is the same identifier ΚΗΜΔΗΣ uses as its organization key,
+ * verified across a sample of the register, so a body already resolved for ΚΗΜΔΗΣ
+ * needs no second name lookup.
+ */
+export async function getDiavgeiaDecisionCounts(
+  uid: string,
+  years: number[],
+): Promise<DiavgeiaDecisionCounts | null> {
+  if (!uid) return null;
+
+  const count = (query: string) => countDecisions(query, uid);
+
+  // Sequential, not Promise.all: firing these together — and several organizations'
+  // worth at once from the comparison view — got most of them throttled, and a
+  // throttled count is indistinguishable from a real zero once it lands in a table.
+  const totalAllTime = await count(`organizationUid:"${uid}"`);
+
+  const byYear: { year: number; count: number | null }[] = [];
+  for (const year of years) {
+    byYear.push({
+      year,
+      count: await count(
+        `organizationUid:"${uid}" AND textFinancialYear:${year}`,
+      ),
+    });
+  }
+
+  if (totalAllTime === null && byYear.every((y) => y.count === null)) {
+    return null;
+  }
+
+  return {
+    uid,
+    totalAllTime,
+    byYear: byYear.sort((a, b) => b.year - a.year),
+  };
+}
+
 async function getRecentDecisions(uid: string): Promise<DiavgeiaDecision[]> {
   try {
     // URL Encode the query parameter properly

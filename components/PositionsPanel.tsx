@@ -12,11 +12,65 @@ import {
   ChevronLeft,
   ChevronRight,
   FilterX,
+  Download,
 } from "lucide-react";
 import type { OrgmaThesiDto, OrgmaThesiStatus } from "@/types/api";
 import { positionsAPI } from "@/lib/api";
-import { getPositionStatusLabel, POSITION_STATUS_ORDER } from "@/lib/utils";
+import {
+  getEducationLabel,
+  getEmployeeCategoryDescription,
+  getEmploymentTypeDescription,
+  getPositionStatusLabel,
+  getRankDescription,
+  POSITION_STATUS_ORDER,
+} from "@/lib/utils";
+import { downloadCsv, timestampedFilename, type CsvColumn } from "@/lib/csv";
 import PositionCard from "./PositionCard";
+
+/**
+ * Coded fields are resolved to their Greek labels rather than exported raw: the
+ * numeric codes are meaningless outside the app, and the point of the export is to
+ * be readable in a spreadsheet. The code is kept alongside where it is the position's
+ * own identifier.
+ */
+const positionCsvColumns: CsvColumn<OrgmaThesiDto>[] = [
+  { header: "Κωδικός θέσης", value: (p) => p.code },
+  { header: "Κωδικός φορέα", value: (p) => p.organizationCode },
+  { header: "Κωδικός μονάδας", value: (p) => p.unitCode },
+  {
+    header: "Τύπος",
+    value: (p) =>
+      p.type === "Organic"
+        ? "Οργανική"
+        : p.type === "Temporary"
+          ? "Προσωποπαγής"
+          : "",
+  },
+  { header: "Κατάσταση", value: (p) => getPositionStatusLabel(p.status) },
+  {
+    header: "Σχέση εργασίας",
+    value: (p) => getEmploymentTypeDescription(p.employmentType),
+  },
+  {
+    header: "Κατηγορία υπαλλήλου",
+    value: (p) => getEmployeeCategoryDescription(p.employeeCategory),
+  },
+  {
+    header: "Εκπαιδευτική κατηγορία",
+    value: (p) =>
+      p.educationCategory ? getEducationLabel(p.educationCategory) : "",
+  },
+  { header: "Βαθμός", value: (p) => getRankDescription(p.rank) },
+  { header: "Κλάδος/Ειδικότητα", value: (p) => p.speciality },
+  { header: "Στο Προσοντολόγιο", value: (p) => p.inProsontologio },
+  { header: "Περιγράμμα θέσης", value: (p) => p.jobDescriptionTitle },
+  { header: "Κωδικός περιγράμματος", value: (p) => p.jobDescriptionCode },
+  { header: "Έκδοση περιγράμματος", value: (p) => p.jobDescriptionVersion },
+  {
+    header: "Ημ/νία έκδοσης",
+    value: (p) => p.jobDescriptionVersionDate,
+  },
+];
 
 interface PositionsPanelProps {
   organizationCode: string;
@@ -86,6 +140,15 @@ export default function PositionsPanel({
     return result;
   }, [positions, searchTerm, statusFilter]);
 
+  const handleExportCsv = () => {
+    const scope = unitCode ? `monada-${unitCode}` : `foreas-${organizationCode}`;
+    downloadCsv(
+      timestampedFilename(`theseis-${scope}`),
+      filteredPositions,
+      positionCsvColumns,
+    );
+  };
+
   // 2. Υπολογισμός Pagination
   const totalPages = Math.ceil(filteredPositions.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -139,23 +202,38 @@ export default function PositionsPanel({
             </div>
           </div>
 
-          <button
-            onClick={handleFetchPositions}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Φόρτωση...</span>
-              </>
-            ) : (
-              <>
-                <Briefcase className="h-4 w-4" />
-                <span>{fetched ? "Ανανέωση" : "Φόρτωση"}</span>
-              </>
+          <div className="flex items-center gap-2">
+            {/* Exports what the user is currently looking at, filters included —
+                exporting the unfiltered set would silently disagree with the screen. */}
+            {fetched && filteredPositions.length > 0 && (
+              <button
+                onClick={handleExportCsv}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors text-sm font-medium"
+                title={`Εξαγωγή ${filteredPositions.length} θέσεων σε CSV`}
+              >
+                <Download className="h-4 w-4" />
+                <span>CSV ({filteredPositions.length})</span>
+              </button>
             )}
-          </button>
+
+            <button
+              onClick={handleFetchPositions}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Φόρτωση...</span>
+                </>
+              ) : (
+                <>
+                  <Briefcase className="h-4 w-4" />
+                  <span>{fetched ? "Ανανέωση" : "Φόρτωση"}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Statistics Summary - Πιο compact */}

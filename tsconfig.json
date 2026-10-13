@@ -10,6 +10,11 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // Lets lib/khmdhs/*.ts import each other with explicit .ts extensions, which is
+    // what makes them loadable by plain Node (scripts/check-khmdhs-matching.mjs)
+    // as well as by the bundler. Permissive, not required — other imports are
+    // unaffected.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,

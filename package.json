@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "khmdhs:harvest": "node scripts/harvest-khmdhs-orgs.mjs",
+    "khmdhs:check-matching": "node --experimental-strip-types scripts/check-khmdhs-matching.mjs",
+    "khmdhs:smoke": "node --experimental-strip-types scripts/smoke-khmdhs.mjs",
+    "check:csv": "node --experimental-strip-types scripts/check-csv.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

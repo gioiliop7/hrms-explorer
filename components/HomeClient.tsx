@@ -27,6 +27,7 @@ import { useSearchParams } from "next/navigation";
 import { ExtendedOrganization } from "@/types/frontend";
 import ShareButton from "@/components/ShareButton";
 import FullPageLoader from "@/components/FullPageLoader";
+import KhmdhsPanel from "@/components/KhmdhsPanel";
 
 export default function HomeClient() {
 
@@ -379,6 +380,21 @@ export default function HomeClient() {
                   <OrganizationCard
                     organization={selectedOrganization}
                     onShowPositions={handleViewOrgPositions}
+                  />
+                </div>
+              )}
+
+              {/* ΚΗΜΔΗΣ public procurement. Keyed on the organization so a new
+                  selection remounts rather than showing the previous one's data
+                  while the next request is in flight. */}
+              {selectedOrganization && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold text-[#1b3d89]">
+                    Δημόσιες Συμβάσεις
+                  </h2>
+                  <KhmdhsPanel
+                    key={selectedOrganization.code}
+                    organizationName={selectedOrganization.preferredLabel}
                   />
                 </div>
               )}
